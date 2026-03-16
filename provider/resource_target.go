@@ -8,6 +8,8 @@ import (
 	"github.com/gmpinder/terraform-provider-pangolin/internal/client"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -305,23 +307,7 @@ func (r *targetResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	var healthcheck *targetHealthCheck
-	var hc_headers []client.TargetHeader
-	resp.Diagnostics.Append(data.HealthCheck.As(ctx, &healthcheck, basetypes.ObjectAsOptions{})...)
-
-	if healthcheck != nil && !healthcheck.Headers.IsNull() {
-		h := make([]targetHCHeader, len(healthcheck.Headers.Elements()))
-		resp.Diagnostics.Append(healthcheck.Headers.ElementsAs(ctx, &h, false)...)
-
-		hc_headers = make([]client.TargetHeader, len(h))
-
-		for i, header := range h {
-			hc_headers[i] = client.TargetHeader{
-				Name:  header.Name.ValueString(),
-				Value: header.Value.ValueString(),
-			}
-		}
-	}
+	healthcheck, hc_headers := extractNestedValues(ctx, &resp.Diagnostics, &data)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -395,7 +381,7 @@ func (r *targetResource) Read(ctx context.Context, req resource.ReadRequest, res
 	data.RewritePathType = types.StringPointerValue(target.RewritePathType)
 	data.SiteID = types.Int64PointerValue(target.SiteID)
 
-	if target.HCHostname != nil && target.Port != nil {
+	if target.HCHostname != nil && target.HCPort != nil {
 		healthcheck := targetHealthCheck{
 			Enabled:           types.BoolPointerValue(target.Enabled),
 			Path:              types.StringPointerValue(target.HCPath),
@@ -412,11 +398,43 @@ func (r *targetResource) Read(ctx context.Context, req resource.ReadRequest, res
 			TlsServerName:     types.StringPointerValue(target.HCTlsServerName),
 		}
 
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("health_check"), healthcheck)...)
-
+		var diags diag.Diagnostics
 		if target.HCHeaders != nil {
-			resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("health_check.headers"), target.HCHeaders)...)
+			hcHeaders := []attr.Value{}
+
+			for _, header := range target.HCHeaders {
+				obj, diags := types.ObjectValue(
+					map[string]attr.Type{
+						"name":  types.StringType,
+						"value": types.StringType,
+					},
+					map[string]attr.Value{
+						"name":  types.StringValue(header.Name),
+						"value": types.StringValue(header.Value),
+					},
+				)
+
+				if !diags.HasError() {
+					hcHeaders = append(hcHeaders, obj)
+				}
+				resp.Diagnostics.Append(diags...)
+			}
+
+			healthcheck.Headers, diags = types.ListValue(
+				basetypes.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"name":  types.StringType,
+						"value": types.StringType,
+					},
+				},
+				hcHeaders,
+			)
+
+			resp.Diagnostics.Append(diags...)
 		}
+
+		data.HealthCheck, diags = types.ObjectValueFrom(ctx, data.HealthCheck.AttributeTypes(ctx), healthcheck)
+		resp.Diagnostics.Append(diags...)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -431,23 +449,7 @@ func (r *targetResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	var healthcheck *targetHealthCheck
-	var hc_headers []client.TargetHeader
-	resp.Diagnostics.Append(data.HealthCheck.As(ctx, &healthcheck, basetypes.ObjectAsOptions{})...)
-
-	if healthcheck != nil && !healthcheck.Headers.IsNull() {
-		h := make([]targetHCHeader, len(healthcheck.Headers.Elements()))
-		resp.Diagnostics.Append(healthcheck.Headers.ElementsAs(ctx, &h, false)...)
-
-		hc_headers = make([]client.TargetHeader, len(h))
-
-		for i, header := range h {
-			hc_headers[i] = client.TargetHeader{
-				Name:  header.Name.ValueString(),
-				Value: header.Value.ValueString(),
-			}
-		}
-	}
+	healthcheck, hc_headers := extractNestedValues(ctx, &resp.Diagnostics, &data)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -519,4 +521,29 @@ func (r *targetResource) ImportState(ctx context.Context, req resource.ImportSta
 	}
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), id)...)
+}
+
+func extractNestedValues(
+	ctx context.Context,
+	diags *diag.Diagnostics,
+	data *targetResourceModel,
+) (*targetHealthCheck, []client.TargetHeader) {
+	var healthcheck *targetHealthCheck
+	var hc_headers []client.TargetHeader
+	diags.Append(data.HealthCheck.As(ctx, &healthcheck, basetypes.ObjectAsOptions{})...)
+
+	if healthcheck != nil && !healthcheck.Headers.IsNull() {
+		h := make([]targetHCHeader, len(healthcheck.Headers.Elements()))
+		diags.Append(healthcheck.Headers.ElementsAs(ctx, &h, false)...)
+
+		hc_headers = make([]client.TargetHeader, len(h))
+
+		for i, header := range h {
+			hc_headers[i] = client.TargetHeader{
+				Name:  header.Name.ValueString(),
+				Value: header.Value.ValueString(),
+			}
+		}
+	}
+	return healthcheck, hc_headers
 }
