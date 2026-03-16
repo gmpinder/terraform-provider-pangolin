@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/groteck/terraform-provider-pangolin/internal/client"
+	"github.com/gmpinder/terraform-provider-pangolin/internal/client"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"

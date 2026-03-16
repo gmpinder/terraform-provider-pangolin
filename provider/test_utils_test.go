@@ -3,7 +3,7 @@ package provider
 import (
 	"testing"
 
-	"github.com/groteck/terraform-provider-pangolin/internal/client"
+	"github.com/gmpinder/terraform-provider-pangolin/internal/client"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 )

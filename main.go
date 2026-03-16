@@ -5,7 +5,7 @@ import (
 	"flag"
 	"log"
 
-	"github.com/groteck/terraform-provider-pangolin/provider"
+	"github.com/gmpinder/terraform-provider-pangolin/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 )
 
