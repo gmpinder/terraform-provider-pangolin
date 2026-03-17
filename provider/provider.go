@@ -86,6 +86,7 @@ func (p *pangolinProvider) Configure(ctx context.Context, req provider.Configure
 func (p *pangolinProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewSiteResource,
+		NewSiteResourceResource,
 		NewTargetResource,
 		NewRoleResource,
 		NewResourceResource,

@@ -37,7 +37,7 @@ func TestAccTarget_Basic(t *testing.T) {
 	})
 }
 
-func testAccTargetConfig(siteID int, ip string, port int) string {
+func testAccTargetConfig(siteID int64, ip string, port int) string {
 	return fmt.Sprintf(`
 provider "pangolin" {
   base_url = %[1]q

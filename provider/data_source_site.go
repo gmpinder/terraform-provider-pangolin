@@ -76,8 +76,8 @@ func (d *siteDataSource) Read(ctx context.Context, req datasource.ReadRequest, r
 	}
 
 	for _, s := range sites {
-		if s.Name == data.Name.ValueString() {
-			data.ID = types.Int64Value(int64(s.ID))
+		if *s.Name == data.Name.ValueString() {
+			data.ID = types.Int64PointerValue(s.ID)
 			resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 			return
 		}

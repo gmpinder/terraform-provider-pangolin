@@ -35,19 +35,7 @@ resource "pangolin_target" "example" {
 ### Optional
 
 - `enabled` (Boolean) Whether the target is enabled.
-- `hc_enabled` (Boolean) Whether health checks are enabled.
-- `hc_follow_redirects` (Boolean) Whether to follow redirects during health checks.
-- `hc_hostname` (String) The health check hostname.
-- `hc_interval` (Number) The health check interval.
-- `hc_method` (String) The health check method.
-- `hc_mode` (String) The health check mode.
-- `hc_path` (String) The health check path.
-- `hc_port` (Number) The health check port.
-- `hc_scheme` (String) The health check scheme (http or https).
-- `hc_status` (Number) The expected health check status code.
-- `hc_timeout` (Number) The health check timeout.
-- `hc_tls_server_name` (String) The TLS server name for health checks.
-- `hc_unhealthy_interval` (Number) The health check unhealthy interval.
+- `health_check` (Attributes) Health Check options (see [below for nested schema](#nestedatt--health_check))
 - `method` (String) The load balancing method.
 - `path` (String) The path for the target.
 - `path_match_type` (String) The path match type.
@@ -58,3 +46,34 @@ resource "pangolin_target" "example" {
 ### Read-Only
 
 - `id` (Number) The ID of the target.
+
+<a id="nestedatt--health_check"></a>
+### Nested Schema for `health_check`
+
+Required:
+
+- `hostname` (String) The health check hostname or IP.
+- `port` (Number) The health check port.
+
+Optional:
+
+- `enabled` (Boolean) Whether health checks are enabled.
+- `follow_redirects` (Boolean) Whether to follow redirects during health checks.
+- `headers` (Attributes List) List of headers to set when forwarding requests. (see [below for nested schema](#nestedatt--health_check--headers))
+- `interval` (Number) The health check interval.
+- `method` (String) The health check method.
+- `mode` (String) The health check mode.
+- `path` (String) The health check path.
+- `scheme` (String) The health check scheme (http or https).
+- `status` (Number) The expected health check status code.
+- `timeout` (Number) The health check timeout.
+- `tls_server_name` (String) The TLS server name for health checks.
+- `unhealthy_interval` (Number) The health check unhealthy interval.
+
+<a id="nestedatt--health_check--headers"></a>
+### Nested Schema for `health_check.headers`
+
+Required:
+
+- `name` (String) Header name.
+- `value` (String) Header value.

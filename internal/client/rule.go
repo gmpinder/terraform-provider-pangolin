@@ -38,7 +38,7 @@ func (c *Client) UpdateRule(resourceID int64, ruleID int64, rule *Rule) (*Rule, 
 	return &out, err
 }
 
-func (c *Client) GetRules(resourceID int64) ([]Rule, error) {
+func (c *Client) ListRules(resourceID int64) ([]Rule, error) {
 	path := fmt.Sprintf("/resource/%d/rules", resourceID)
 	data, err := c.doRequest("GET", path, nil)
 	if err != nil {
@@ -52,7 +52,7 @@ func (c *Client) GetRules(resourceID int64) ([]Rule, error) {
 }
 
 func (c *Client) GetRule(resourceID int64, ruleID int64) (*Rule, error) {
-	rules, err := c.GetRules(resourceID)
+	rules, err := c.ListRules(resourceID)
 	if err != nil {
 		return nil, err
 	}

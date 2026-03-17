@@ -40,7 +40,7 @@ func TestAccSiteResource_Basic(t *testing.T) {
 	})
 }
 
-func testAccSiteResourceConfig(siteID int, name, mode, destination, alias string) string {
+func testAccSiteResourceConfig(siteID int64, name, mode, destination, alias string) string {
 	return fmt.Sprintf(`
 provider "pangolin" {
   base_url = %[1]q

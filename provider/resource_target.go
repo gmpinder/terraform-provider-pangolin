@@ -97,6 +97,9 @@ func (r *targetResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"site_id": schema.Int64Attribute{
 				Required:            true,
 				MarkdownDescription: "The ID of the site.",
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 			},
 			"ip": schema.StringAttribute{
 				Required:            true,

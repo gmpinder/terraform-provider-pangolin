@@ -29,7 +29,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func getTestSiteID(t *testing.T) int {
+func getTestSiteID(t *testing.T) int64 {
 	c := client.NewClient(testURL, testToken)
 	sites, err := c.ListSites(testOrgID)
 	if err != nil {
@@ -37,7 +37,7 @@ func getTestSiteID(t *testing.T) int {
 	}
 
 	if len(sites) > 0 {
-		return sites[0].ID
+		return *sites[0].ID
 	}
 
 	// Create one if it doesn't exist
@@ -46,5 +46,5 @@ func getTestSiteID(t *testing.T) int {
 		t.Fatalf("failed to create test site: %v", err)
 	}
 
-	return site.ID
+	return *site.ID
 }
