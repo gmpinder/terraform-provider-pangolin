@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     pangolin = {
-      source = "registry.terraform.io/groteck/pangolin"
+      source = "registry.terraform.io/gmpinder/pangolin"
     }
   }
 }

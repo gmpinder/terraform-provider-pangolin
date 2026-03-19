@@ -3,7 +3,6 @@ set -e
 
 # Configuration
 ORG_ID="test-tf"
-SITE_ID="1"
 API_TOKEN="f1l1v68jvs2j8ix.34fvctzav5t46kdnchztxz6u5ajfxt5wobs4iulv"
 API_URL="http://localhost:3003/v1"
 PROVIDER_PATH=$(pwd)
@@ -19,7 +18,7 @@ export ASDF_TERRAFORM_VERSION=1.10.0
 # Configure local plugin mirror
 OS=$(go env GOOS)
 ARCH=$(go env GOARCH)
-PLUGIN_DIR="$TEST_DIR/plugins/registry.terraform.io/groteck/pangolin/0.1.0/${OS}_${ARCH}"
+PLUGIN_DIR="$TEST_DIR/plugins/registry.terraform.io/gmpinder/pangolin/0.1.0/${OS}_${ARCH}"
 mkdir -p "$PLUGIN_DIR"
 cp "$PROVIDER_PATH/terraform-provider-pangolin" "$PLUGIN_DIR/terraform-provider-pangolin_v0.1.0"
 
@@ -30,7 +29,6 @@ cp "$PROVIDER_PATH/.tool-versions" "$TEST_DIR/"
 # Replace placeholders with test values
 sed -i '' "s/YOUR_API_TOKEN/$API_TOKEN/g" "$TEST_DIR/main.tf"
 sed -i '' "s/your-org-id/$ORG_ID/g" "$TEST_DIR/main.tf"
-sed -i '' "s/site_id     = 123/site_id     = $SITE_ID/g" "$TEST_DIR/main.tf"
 
 # Inject the base_url
 sed -i '' 's|token = "'"$API_TOKEN"'"|token = "'"$API_TOKEN"'"\n  base_url = "'"$API_URL"'"|' "$TEST_DIR/main.tf"

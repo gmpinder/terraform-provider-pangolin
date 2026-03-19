@@ -28,23 +28,3 @@ func testAccPreCheck(t *testing.T) {
 		t.Fatalf("API unreachable or invalid credentials: %v", err)
 	}
 }
-
-func getTestSiteID(t *testing.T) int64 {
-	c := client.NewClient(testURL, testToken)
-	sites, err := c.ListSites(testOrgID)
-	if err != nil {
-		t.Fatalf("failed to list sites: %v", err)
-	}
-
-	if len(sites) > 0 {
-		return *sites[0].ID
-	}
-
-	// Create one if it doesn't exist
-	site, err := c.CreateSite(testOrgID, "Test Site")
-	if err != nil {
-		t.Fatalf("failed to create test site: %v", err)
-	}
-
-	return *site.ID
-}

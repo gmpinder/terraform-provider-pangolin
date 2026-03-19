@@ -45,7 +45,7 @@ To test the provider without publishing it, you can use Terraform's `dev_overrid
 ```hcl
 provider_installation {
   dev_overrides {
-    "registry.terraform.io/groteck/pangolin" = "/path/to/your/project/pangolin-tf"
+    "registry.terraform.io/gmpinder/pangolin" = "/path/to/your/project/pangolin-tf"
   }
   direct {}
 }

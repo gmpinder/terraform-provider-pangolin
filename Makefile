@@ -30,6 +30,9 @@ test-reset:
 test-acc: test-reset
 	ASDF_TERRAFORM_VERSION=1.10.0 TF_ACC=1 go test -v ./provider/...
 
+test-example: test-reset
+	./tests/test-example-main.sh
+
 # Generate documentation
 docs:
 	ASDF_TERRAFORM_VERSION=1.10.0 go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --provider-name pangolin
