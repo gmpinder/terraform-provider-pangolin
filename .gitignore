@@ -32,6 +32,8 @@ terraform-provider-pangolin
 tests/env/config/db/*.sqlite
 tests/env/config/db/*.sqlite-journal
 tests/env/config/db/*.sqlite-wal
+tests/env/config/db/backups/
+tests/env/config/key
 tests/fixtures/*.sqlite.debug
 !tests/fixtures/db.sqlite.gold
 

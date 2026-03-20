@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 )
@@ -47,6 +48,10 @@ type TargetHeaders []TargetHeader
 // This checks for that case and properly unmarshals it twice
 // if it's a `string`.
 func (th *TargetHeaders) UnmarshalJSON(input []byte) error {
+	if bytes.Equal(input, []byte("null")) {
+		return nil
+	}
+
 	if len(input) > 1 {
 		switch input[0] {
 		case '"':

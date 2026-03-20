@@ -42,7 +42,7 @@ func (p *pangolinProvider) Schema(_ context.Context, _ provider.SchemaRequest, r
 				Description: "Pangolin API base URL. Can also be set via the PANGOLIN_BASE_URL environment variable. Defaults to https://api.pangolin.net/v1",
 			},
 			"token": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
 				Sensitive:   true,
 				Description: "Pangolin API token. Can also be set via the PANGOLIN_TOKEN environment variable.",
 			},

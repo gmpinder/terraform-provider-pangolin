@@ -12,11 +12,7 @@ This provider is built using the **Terraform Plugin Framework** (instead of the 
 The API logic is isolated in `internal/client/`.
 - **Why**: This separates the HTTP/JSON concerns from the Terraform state management. It makes the code more maintainable and allows for easier unit testing of the API client independent of the Terraform lifecycle.
 
-### 3. Resource Mapping
-- **Flat vs. Nested**: Resources like `pangolin_site_resource` include ID lists for roles and users to match the API's expectation of many-to-many relationships via array properties.
-- **Sub-resources**: `pangolin_target` is treated as a separate resource rather than a block within `site_resource` because targets have their own lifecycle and IDs in the Pangolin API.
-
-### 4. Authentication
+### 3. Authentication
 The provider uses Bearer Token authentication as required by the Pangolin Integration API. The token is marked as `sensitive` in the schema to ensure it doesn't leak into logs.
 
 ## Requirements
@@ -84,24 +80,6 @@ provider "pangolin" {
   base_url = "https://api.pangolin.net/v1" # Optional
 }
 ```
-
-## Supported Resources
-
-### `pangolin_site_resource`
-Manages an application or service exposed through Pangolin (Host or CIDR mode).
-- **Attributes**: `name`, `mode` (host/cidr), `site_id`, `destination`, `alias`, `user_ids`, `role_ids`.
-
-### `pangolin_resource`
-Manages an App-style resource (HTTP/TCP/UDP).
-- **Attributes**: `name`, `protocol`, `http`, `subdomain`, `domain_id`.
-
-### `pangolin_target`
-Manages a backend target for a `pangolin_resource`.
-- **Attributes**: `resource_id`, `ip`, `port`, `enabled`.
-
-### `pangolin_role`
-Manages organization-level roles.
-- **Attributes**: `name`, `description`, `org_id`.
 
 ## Examples
 

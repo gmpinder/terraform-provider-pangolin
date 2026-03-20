@@ -173,14 +173,14 @@ func (r *siteResourceResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	res := &client.SiteResource{
-		Name:               data.Name.ValueString(),
-		Mode:               data.Mode.ValueString(),
-		SiteID:             int(data.SiteID.ValueInt64()),
-		Destination:        data.Destination.ValueString(),
-		Enabled:            data.Enabled.ValueBool(),
-		TCPPortRangeString: data.TCPPortRangeString.ValueString(),
-		UDPPortRangeString: data.UDPPortRangeString.ValueString(),
-		DisableIcmp:        data.DisableIcmp.ValueBool(),
+		Name:               data.Name.ValueStringPointer(),
+		Mode:               data.Mode.ValueStringPointer(),
+		SiteID:             data.SiteID.ValueInt64Pointer(),
+		Destination:        data.Destination.ValueStringPointer(),
+		Enabled:            data.Enabled.ValueBoolPointer(),
+		TCPPortRangeString: data.TCPPortRangeString.ValueStringPointer(),
+		UDPPortRangeString: data.UDPPortRangeString.ValueStringPointer(),
+		DisableIcmp:        data.DisableIcmp.ValueBoolPointer(),
 	}
 
 	if !data.Alias.IsNull() {
@@ -202,8 +202,8 @@ func (r *siteResourceResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
-	data.ID = types.Int64Value(int64(created.ID))
-	data.NiceID = types.StringValue(created.NiceID)
+	data.ID = types.Int64PointerValue(created.ID)
+	data.NiceID = types.StringPointerValue(created.NiceID)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -216,24 +216,21 @@ func (r *siteResourceResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	res, err := r.client.GetSiteResource(data.OrgID.ValueString(), int(data.SiteID.ValueInt64()), int(data.ID.ValueInt64()))
+	res, err := r.client.GetSiteResource(data.OrgID.ValueString(), data.SiteID.ValueInt64(), data.ID.ValueInt64())
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading site resource", err.Error())
 		return
 	}
 
-	data.Name = types.StringValue(res.Name)
-	data.Mode = types.StringValue(res.Mode)
-	data.Destination = types.StringValue(res.Destination)
-	data.Enabled = types.BoolValue(res.Enabled)
-	if res.Alias != nil {
-		data.Alias = types.StringValue(*res.Alias)
-	} else {
-		data.Alias = types.StringNull()
-	}
-	data.TCPPortRangeString = types.StringValue(res.TCPPortRangeString)
-	data.UDPPortRangeString = types.StringValue(res.UDPPortRangeString)
-	data.DisableIcmp = types.BoolValue(res.DisableIcmp)
+	data.Name = types.StringPointerValue(res.Name)
+	data.SiteID = types.Int64PointerValue(res.SiteID)
+	data.Mode = types.StringPointerValue(res.Mode)
+	data.Destination = types.StringPointerValue(res.Destination)
+	data.Enabled = types.BoolPointerValue(res.Enabled)
+	data.Alias = types.StringPointerValue(res.Alias)
+	data.TCPPortRangeString = types.StringPointerValue(res.TCPPortRangeString)
+	data.UDPPortRangeString = types.StringPointerValue(res.UDPPortRangeString)
+	data.DisableIcmp = types.BoolPointerValue(res.DisableIcmp)
 
 	roleIDs, err := r.client.GetSiteResourceRoles(int(data.ID.ValueInt64()))
 	if err == nil {
@@ -269,14 +266,15 @@ func (r *siteResourceResource) Update(ctx context.Context, req resource.UpdateRe
 	}
 
 	res := &client.SiteResource{
-		Name:               data.Name.ValueString(),
-		Mode:               data.Mode.ValueString(),
-		SiteID:             int(data.SiteID.ValueInt64()),
-		Destination:        data.Destination.ValueString(),
-		Enabled:            data.Enabled.ValueBool(),
-		TCPPortRangeString: data.TCPPortRangeString.ValueString(),
-		UDPPortRangeString: data.UDPPortRangeString.ValueString(),
-		DisableIcmp:        data.DisableIcmp.ValueBool(),
+		Name:               data.Name.ValueStringPointer(),
+		Mode:               data.Mode.ValueStringPointer(),
+		SiteID:             data.SiteID.ValueInt64Pointer(),
+		OrgID:              data.OrgID.ValueStringPointer(),
+		Destination:        data.Destination.ValueStringPointer(),
+		Enabled:            data.Enabled.ValueBoolPointer(),
+		TCPPortRangeString: data.TCPPortRangeString.ValueStringPointer(),
+		UDPPortRangeString: data.UDPPortRangeString.ValueStringPointer(),
+		DisableIcmp:        data.DisableIcmp.ValueBoolPointer(),
 	}
 
 	if !data.Alias.IsNull() {

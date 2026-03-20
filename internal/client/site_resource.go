@@ -7,38 +7,26 @@ import (
 
 // SiteResource definitions
 type SiteResource struct {
-	ID                 int      `json:"siteResourceId,omitempty"`
-	NiceID             string   `json:"niceId,omitempty"`
-	Name               string   `json:"name"`
-	Mode               string   `json:"mode"`
-	SiteID             int      `json:"siteId"`
-	Destination        string   `json:"destination"`
-	Enabled            bool     `json:"enabled"`
+	ID                 *int64   `json:"siteResourceId,omitempty"`
+	NiceID             *string  `json:"niceId,omitempty"`
+	OrgID              *string  `json:"orgId,omitempty"`
+	Name               *string  `json:"name,omitempty"`
+	Mode               *string  `json:"mode,omitempty"`
+	SiteID             *int64   `json:"siteId,omitempty"`
+	Destination        *string  `json:"destination,omitempty"`
+	Enabled            *bool    `json:"enabled,omitempty"`
 	Alias              *string  `json:"alias,omitempty"`
 	UserIDs            []string `json:"userIds"`
-	RoleIDs            []int    `json:"roleIds"`
-	ClientIDs          []int    `json:"clientIds"`
-	TCPPortRangeString string   `json:"tcpPortRangeString,omitempty"`
-	UDPPortRangeString string   `json:"udpPortRangeString,omitempty"`
-	DisableIcmp        bool     `json:"disableIcmp,omitempty"`
+	RoleIDs            []int64  `json:"roleIds,omitempty"`
+	ClientIDs          []int64  `json:"clientIds"`
+	TCPPortRangeString *string  `json:"tcpPortRangeString,omitempty"`
+	UDPPortRangeString *string  `json:"udpPortRangeString,omitempty"`
+	DisableIcmp        *bool    `json:"disableIcmp,omitempty"`
 }
 
 func (c *Client) CreateSiteResource(orgID string, res *SiteResource) (*SiteResource, error) {
-	path := fmt.Sprintf("/org/%s/private-resource", orgID)
-	body := map[string]interface{}{
-		"name":        res.Name,
-		"mode":        res.Mode,
-		"siteId":      res.SiteID,
-		"destination": res.Destination,
-		"enabled":     res.Enabled,
-		"userIds":     res.UserIDs,
-		"roleIds":     res.RoleIDs,
-		"clientIds":   res.ClientIDs,
-	}
-	if res.Alias != nil {
-		body["alias"] = *res.Alias
-	}
-	data, err := c.doRequest("PUT", path, body)
+	path := fmt.Sprintf("/org/%s/site-resource", orgID)
+	data, err := c.doRequest("PUT", path, res)
 	if err != nil {
 		return nil, err
 	}
@@ -47,9 +35,13 @@ func (c *Client) CreateSiteResource(orgID string, res *SiteResource) (*SiteResou
 	return &out, err
 }
 
-func (c *Client) GetSiteResource(orgID string, siteID int, resID int) (*SiteResource, error) {
+func (c *Client) GetSiteResource(orgID string, siteID int64, resID int64) (*SiteResource, error) {
 	path := fmt.Sprintf("/site-resource/%d", resID)
-	data, err := c.doRequest("GET", path, nil)
+	rs := SiteResource{
+		OrgID:  &orgID,
+		SiteID: &siteID,
+	}
+	data, err := c.doRequest("GET", path, rs)
 	if err != nil {
 		return nil, err
 	}
@@ -60,20 +52,7 @@ func (c *Client) GetSiteResource(orgID string, siteID int, resID int) (*SiteReso
 
 func (c *Client) UpdateSiteResource(resID int, res *SiteResource) (*SiteResource, error) {
 	path := fmt.Sprintf("/site-resource/%d", resID)
-	body := map[string]interface{}{
-		"name":        res.Name,
-		"siteId":      res.SiteID,
-		"mode":        res.Mode,
-		"destination": res.Destination,
-		"enabled":     res.Enabled,
-		"userIds":     res.UserIDs,
-		"roleIds":     res.RoleIDs,
-		"clientIds":   res.ClientIDs,
-	}
-	if res.Alias != nil {
-		body["alias"] = *res.Alias
-	}
-	data, err := c.doRequest("POST", path, body)
+	data, err := c.doRequest("POST", path, res)
 	if err != nil {
 		return nil, err
 	}
