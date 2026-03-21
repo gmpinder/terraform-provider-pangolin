@@ -24,7 +24,7 @@ The provider uses Bearer Token authentication as required by the Pangolin Integr
 
 | Pangolin Version | Provider Version |
 | ---------------- | ---------------- |
-| >= v1.15.2       | >= 0.1.0         |
+| >= v1.16.2       | >= 1.0.0         |
 
 ## Building The Provider
 
