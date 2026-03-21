@@ -9,12 +9,15 @@ import (
 
 	"github.com/gmpinder/terraform-provider-pangolin/internal/client"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -92,6 +95,9 @@ func (r *siteResourceResource) Schema(_ context.Context, _ resource.SchemaReques
 			"site_id": schema.Int64Attribute{
 				Required:            true,
 				MarkdownDescription: "The ID of the site.",
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
 			},
 			"destination": schema.StringAttribute{
 				Required:            true,
@@ -114,36 +120,60 @@ func (r *siteResourceResource) Schema(_ context.Context, _ resource.SchemaReques
 				},
 			},
 			"user_ids": schema.ListAttribute{
-				ElementType:         types.StringType,
-				Optional:            true,
-				Computed:            true,
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+				Default: listdefault.StaticValue(
+					types.ListValueMust(types.StringType, make([]attr.Value, 0)),
+				),
 				MarkdownDescription: "The list of user IDs allowed to access this resource.",
 			},
 			"role_ids": schema.ListAttribute{
-				ElementType:         types.Int64Type,
-				Optional:            true,
-				Computed:            true,
+				ElementType: types.Int64Type,
+				Optional:    true,
+				Computed:    true,
+				Default: listdefault.StaticValue(
+					types.ListValueMust(types.Int64Type, make([]attr.Value, 0)),
+				),
 				MarkdownDescription: "The list of role IDs allowed to access this resource.",
 			},
 			"client_ids": schema.ListAttribute{
-				ElementType:         types.Int64Type,
-				Optional:            true,
-				Computed:            true,
+				ElementType: types.Int64Type,
+				Optional:    true,
+				Computed:    true,
+				Default: listdefault.StaticValue(
+					types.ListValueMust(types.Int64Type, make([]attr.Value, 0)),
+				),
 				MarkdownDescription: "The list of client IDs allowed to access this resource.",
 			},
 			"tcp_port_range_string": schema.StringAttribute{
 				Optional:            true,
 				Computed:            true,
-				MarkdownDescription: "The TCP port range allowed (e.g., '80,443' or '*').",
+				Default:             stringdefault.StaticString(""),
+				MarkdownDescription: "The TCP port range allowed (e.g., '80,443' or '*'). Defaults to blocking traffic.",
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(
+						regexp.MustCompile(`^(?:(?:[0-9-]+,?)+|\*)$`),
+						"Port range must be like 80,43,8000-8500",
+					),
+				},
 			},
 			"udp_port_range_string": schema.StringAttribute{
 				Optional:            true,
 				Computed:            true,
-				MarkdownDescription: "The UDP port range allowed (e.g., '53' or '*').",
+				Default:             stringdefault.StaticString(""),
+				MarkdownDescription: "The UDP port range allowed (e.g., '53' or '*'). Defaults to blocking traffic.",
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(
+						regexp.MustCompile(`^(?:(?:[0-9-]+,?)+|\*)$`),
+						"Port range must be like 80,43,8000-8500",
+					),
+				},
 			},
 			"disable_icmp": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
+				Default:             booldefault.StaticBool(false),
 				MarkdownDescription: "Whether to disable ICMP for this resource.",
 			},
 		},
@@ -269,7 +299,6 @@ func (r *siteResourceResource) Update(ctx context.Context, req resource.UpdateRe
 		Name:               data.Name.ValueStringPointer(),
 		Mode:               data.Mode.ValueStringPointer(),
 		SiteID:             data.SiteID.ValueInt64Pointer(),
-		OrgID:              data.OrgID.ValueStringPointer(),
 		Destination:        data.Destination.ValueStringPointer(),
 		Enabled:            data.Enabled.ValueBoolPointer(),
 		TCPPortRangeString: data.TCPPortRangeString.ValueStringPointer(),

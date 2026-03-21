@@ -35,19 +35,31 @@ func (c *Client) CreateSiteResource(orgID string, res *SiteResource) (*SiteResou
 	return &out, err
 }
 
-func (c *Client) GetSiteResource(orgID string, siteID int64, resID int64) (*SiteResource, error) {
-	path := fmt.Sprintf("/site-resource/%d", resID)
-	rs := SiteResource{
-		OrgID:  &orgID,
-		SiteID: &siteID,
-	}
-	data, err := c.doRequest("GET", path, rs)
+func (c *Client) ListSiteResources(orgID string) ([]SiteResource, error) {
+	path := fmt.Sprintf("/org/%s/site-resources", orgID)
+	data, err := c.doRequest("GET", path, nil)
 	if err != nil {
 		return nil, err
 	}
-	var out SiteResource
+	var out struct {
+		SiteResources []SiteResource `json:"siteResources"`
+	}
 	err = json.Unmarshal(data, &out)
-	return &out, err
+	return out.SiteResources, err
+}
+
+func (c *Client) GetSiteResource(orgID string, siteID int64, resID int64) (*SiteResource, error) {
+	srList, err := c.ListSiteResources(orgID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, sr := range srList {
+		if *sr.SiteID == siteID {
+			return &sr, nil
+		}
+	}
+	return nil, fmt.Errorf("failed to find site resource %d for org %s", siteID, orgID)
 }
 
 func (c *Client) UpdateSiteResource(resID int, res *SiteResource) (*SiteResource, error) {
