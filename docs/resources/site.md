@@ -30,6 +30,6 @@ Manages an organization role.
 - `address` (String) The address CIDR of the Newt Instance
 - `id` (Number) The ID of the site.
 - `newt_id` (String) The ID to use for setting up a Newt instance.
-- `newt_secret` (String) The secret key used by the Newt Instance.
+- `newt_secret` (String, Sensitive) The secret key used by the Newt Instance.
 - `pub_key` (String) The public key used by the Newt Instance.
 - `subnet` (String) The subnet address CIDR of the Newt Instance.

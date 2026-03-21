@@ -45,8 +45,8 @@ resource "pangolin_site_resource" "example" {
 - `disable_icmp` (Boolean) Whether to disable ICMP for this resource.
 - `enabled` (Boolean) Whether the resource is enabled.
 - `role_ids` (List of Number) The list of role IDs allowed to access this resource.
-- `tcp_port_range_string` (String) The TCP port range allowed (e.g., '80,443' or '*').
-- `udp_port_range_string` (String) The UDP port range allowed (e.g., '53' or '*').
+- `tcp_port_range_string` (String) The TCP port range allowed (e.g., '80,443' or '*'). Defaults to blocking traffic.
+- `udp_port_range_string` (String) The UDP port range allowed (e.g., '53' or '*'). Defaults to blocking traffic.
 - `user_ids` (List of String) The list of user IDs allowed to access this resource.
 
 ### Read-Only
