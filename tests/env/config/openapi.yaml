@@ -89,8 +89,6 @@ paths:
                   maxLength: 255
                 dockerSocketEnabled:
                   type: boolean
-                remoteSubnets:
-                  type: string
               additionalProperties: false
       responses: {}
   /org/{orgId}/site:
@@ -202,6 +200,15 @@ paths:
                   type: string
                 disableIcmp:
                   type: boolean
+                authDaemonPort:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
+                authDaemonMode:
+                  type: string
+                  enum:
+                    - site
+                    - remote
               required:
                 - name
                 - mode
@@ -247,7 +254,7 @@ paths:
           in: path
         - schema:
             type: string
-          required: false
+          required: true
           name: orgId
           in: path
       responses: {}
@@ -309,6 +316,16 @@ paths:
                   type: string
                 disableIcmp:
                   type: boolean
+                authDaemonPort:
+                  type: integer
+                  nullable: true
+                  minimum: 0
+                  exclusiveMinimum: true
+                authDaemonMode:
+                  type: string
+                  enum:
+                    - site
+                    - remote
               required:
                 - siteId
                 - userIds
@@ -337,7 +354,7 @@ paths:
           in: path
         - schema:
             type: string
-          required: false
+          required: true
           name: orgId
           in: path
       responses: {}
@@ -372,6 +389,26 @@ paths:
           required: false
           name: offset
           in: query
+        - schema:
+            type: string
+            enum:
+              - name
+            description: Field to sort by
+          required: false
+          description: Field to sort by
+          name: sort_by
+          in: query
+        - schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+            description: Sort order
+          required: false
+          description: Sort order
+          name: order
+          in: query
       responses: {}
   /org/{orgId}/site-resources:
     get:
@@ -388,16 +425,55 @@ paths:
           name: orgId
           in: path
         - schema:
-            type: string
-            default: '1000'
+            type: integer
+            default: 20
+            description: Number of items per page
           required: false
-          name: limit
+          description: Number of items per page
+          name: pageSize
+          in: query
+        - schema:
+            type: integer
+            default: 1
+            description: Page number to retrieve
+          required: false
+          description: Page number to retrieve
+          name: page
           in: query
         - schema:
             type: string
-            default: '0'
           required: false
-          name: offset
+          name: query
+          in: query
+        - schema:
+            type: string
+            enum:
+              - host
+              - cidr
+            description: Filter site resources by mode
+          required: false
+          description: Filter site resources by mode
+          name: mode
+          in: query
+        - schema:
+            type: string
+            enum:
+              - name
+            description: Field to sort by
+          required: false
+          description: Field to sort by
+          name: sort_by
+          in: query
+        - schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+            description: Sort order
+          required: false
+          description: Sort order
+          name: order
           in: query
       responses: {}
   /site-resource/{siteResourceId}/roles:
@@ -1031,16 +1107,54 @@ paths:
           name: orgId
           in: path
         - schema:
-            type: string
-            default: '1000'
+            type: integer
+            default: 20
+            description: Number of items per page
           required: false
-          name: limit
+          description: Number of items per page
+          name: pageSize
+          in: query
+        - schema:
+            type: integer
+            default: 1
+            description: Page number to retrieve
+          required: false
+          description: Page number to retrieve
+          name: page
           in: query
         - schema:
             type: string
-            default: '0'
           required: false
-          name: offset
+          name: query
+          in: query
+        - schema:
+            type: string
+            enum:
+              - name
+              - megabytesIn
+              - megabytesOut
+            description: Field to sort by
+          required: false
+          description: Field to sort by
+          name: sort_by
+          in: query
+        - schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+            description: Sort order
+          required: false
+          description: Sort order
+          name: order
+          in: query
+        - schema:
+            type: boolean
+            description: Filter by online status
+          required: false
+          description: Filter by online status
+          name: online
           in: query
       responses: {}
   /org/{orgId}/pick-site-defaults:
@@ -1200,6 +1314,24 @@ paths:
                   type: string
                 requireDeviceApproval:
                   type: boolean
+                allowSsh:
+                  type: boolean
+                sshSudoMode:
+                  type: string
+                  enum:
+                    - none
+                    - full
+                    - commands
+                sshSudoCommands:
+                  type: array
+                  items:
+                    type: string
+                sshCreateHomeDir:
+                  type: boolean
+                sshUnixGroups:
+                  type: array
+                  items:
+                    type: string
               required:
                 - name
               additionalProperties: false
@@ -1268,6 +1400,24 @@ paths:
                   type: string
                 requireDeviceApproval:
                   type: boolean
+                allowSsh:
+                  type: boolean
+                sshSudoMode:
+                  type: string
+                  enum:
+                    - none
+                    - full
+                    - commands
+                sshSudoCommands:
+                  type: array
+                  items:
+                    type: string
+                sshCreateHomeDir:
+                  type: boolean
+                sshUnixGroups:
+                  type: array
+                  items:
+                    type: string
               additionalProperties: false
       responses: {}
   /org/{orgId}/roles:
@@ -1312,6 +1462,8 @@ paths:
               properties:
                 orgId:
                   type: string
+                  minLength: 1
+                  maxLength: 32
                 name:
                   type: string
                   minLength: 1
@@ -1446,6 +1598,7 @@ paths:
                       type: string
                       minLength: 1
                       maxLength: 255
+                      pattern: ^[a-zA-Z0-9-]+$
                     subdomain:
                       type: string
                       nullable: true
@@ -1512,6 +1665,9 @@ paths:
                       type: string
                       nullable: true
                       maxLength: 100
+                    postAuthPath:
+                      type: string
+                      nullable: true
                   additionalProperties: false
                 - type: object
                   properties:
@@ -1577,6 +1733,9 @@ paths:
                       type: string
                     stickySession:
                       type: boolean
+                    postAuthPath:
+                      type: string
+                      nullable: true
                   required:
                     - name
                     - http
@@ -1622,16 +1781,99 @@ paths:
           name: orgId
           in: path
         - schema:
-            type: string
-            default: '1000'
+            type: integer
+            default: 20
+            description: Number of items per page
           required: false
-          name: limit
+          description: Number of items per page
+          name: pageSize
+          in: query
+        - schema:
+            type: integer
+            default: 1
+            description: Page number to retrieve
+          required: false
+          description: Page number to retrieve
+          name: page
           in: query
         - schema:
             type: string
-            default: '0'
           required: false
-          name: offset
+          name: query
+          in: query
+        - schema:
+            type: string
+            enum:
+              - name
+            description: Field to sort by
+          required: false
+          description: Field to sort by
+          name: sort_by
+          in: query
+        - schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+            description: Sort order
+          required: false
+          description: Sort order
+          name: order
+          in: query
+        - schema:
+            type: boolean
+            description: Filter resources based on enabled status
+          required: false
+          description: Filter resources based on enabled status
+          name: enabled
+          in: query
+        - schema:
+            type: string
+            enum:
+              - protected
+              - not_protected
+              - none
+            description: >-
+              Filter resources based on authentication state. `protected` means
+              the resource has at least one auth mechanism (password, pincode,
+              header auth, SSO, or email whitelist). `not_protected` means the
+              resource has no auth mechanisms. `none` means the resource is not
+              protected by HTTP (i.e. it has no auth mechanisms and http is
+              false).
+          required: false
+          description: >-
+            Filter resources based on authentication state. `protected` means
+            the resource has at least one auth mechanism (password, pincode,
+            header auth, SSO, or email whitelist). `not_protected` means the
+            resource has no auth mechanisms. `none` means the resource is not
+            protected by HTTP (i.e. it has no auth mechanisms and http is
+            false).
+          name: authState
+          in: query
+        - schema:
+            type: string
+            enum:
+              - no_targets
+              - healthy
+              - degraded
+              - offline
+              - unknown
+            description: >-
+              Filter resources based on health status of their targets.
+              `healthy` means all targets are healthy. `degraded` means at least
+              one target is unhealthy, but not all are unhealthy. `offline`
+              means all targets are unhealthy. `unknown` means all targets have
+              unknown health status. `no_targets` means the resource has no
+              targets.
+          required: false
+          description: >-
+            Filter resources based on health status of their targets. `healthy`
+            means all targets are healthy. `degraded` means at least one target
+            is unhealthy, but not all are unhealthy. `offline` means all targets
+            are unhealthy. `unknown` means all targets have unknown health
+            status. `no_targets` means the resource has no targets.
+          name: healthStatus
           in: query
       responses: {}
   /resource/{resourceId}/users:
@@ -2383,6 +2625,36 @@ paths:
                 - validHours
               additionalProperties: false
       responses: {}
+  /org/{orgId}/user-by-username:
+    get:
+      description: >-
+        Get a user in an organization by username. When idpId is not passed,
+        only internal users are searched (username is globally unique for them).
+        For external (OIDC) users, pass idpId to search by username within that
+        identity provider.
+      tags:
+        - Organization
+        - User
+      security:
+        - Bearer Auth: []
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: orgId
+          in: path
+        - schema:
+            type: string
+            minLength: 1
+          required: true
+          name: username
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: idpId
+          in: query
+      responses: {}
   /user/{userId}:
     get:
       description: Get a user by ID.
@@ -2695,24 +2967,183 @@ paths:
           name: orgId
           in: path
         - schema:
-            type: string
-            default: '1000'
+            type: integer
+            default: 20
+            description: Number of items per page
           required: false
-          name: limit
+          description: Number of items per page
+          name: pageSize
+          in: query
+        - schema:
+            type: integer
+            default: 1
+            description: Page number to retrieve
+          required: false
+          description: Page number to retrieve
+          name: page
           in: query
         - schema:
             type: string
-            default: '0'
           required: false
-          name: offset
+          name: query
           in: query
         - schema:
             type: string
             enum:
-              - user
-              - machine
+              - name
+              - megabytesIn
+              - megabytesOut
+            description: Field to sort by
           required: false
-          name: filter
+          description: Field to sort by
+          name: sort_by
+          in: query
+        - schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+            description: Sort order
+          required: false
+          description: Sort order
+          name: order
+          in: query
+        - schema:
+            type: boolean
+            description: Filter by online status
+          required: false
+          description: Filter by online status
+          name: online
+          in: query
+        - schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - active
+                - blocked
+                - archived
+            default:
+              - active
+            description: >-
+              Filter by client status. Can be a comma-separated list of values.
+              Defaults to 'active'.
+          required: false
+          description: >-
+            Filter by client status. Can be a comma-separated list of values.
+            Defaults to 'active'.
+          name: status
+          in: query
+      responses: {}
+  /org/{orgId}/user-devices:
+    get:
+      description: List all user devices for an organization.
+      tags:
+        - Client
+        - Organization
+      security:
+        - Bearer Auth: []
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: orgId
+          in: path
+        - schema:
+            type: integer
+            default: 20
+            description: Number of items per page
+          required: false
+          description: Number of items per page
+          name: pageSize
+          in: query
+        - schema:
+            type: integer
+            default: 1
+            description: Page number to retrieve
+          required: false
+          description: Page number to retrieve
+          name: page
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: query
+          in: query
+        - schema:
+            type: string
+            enum:
+              - megabytesIn
+              - megabytesOut
+            description: Field to sort by
+          required: false
+          description: Field to sort by
+          name: sort_by
+          in: query
+        - schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+            description: Sort order
+          required: false
+          description: Sort order
+          name: order
+          in: query
+        - schema:
+            type: boolean
+            description: Filter by online status
+          required: false
+          description: Filter by online status
+          name: online
+          in: query
+        - schema:
+            type: string
+            enum:
+              - windows
+              - android
+              - cli
+              - olm
+              - macos
+              - ios
+              - ipados
+              - unknown
+            description: >-
+              Filter by agent type. Use 'unknown' to filter clients with no
+              agent detected.
+          required: false
+          description: >-
+            Filter by agent type. Use 'unknown' to filter clients with no agent
+            detected.
+          name: agent
+          in: query
+        - schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - active
+                - pending
+                - denied
+                - blocked
+                - archived
+            default:
+              - active
+              - pending
+            description: >-
+              Filter by device status. Can include multiple values separated by
+              commas. 'active' means not archived, not blocked, and if approval
+              is enabled, approved. 'pending' and 'denied' are only applicable
+              if approval is enabled.
+          required: false
+          description: >-
+            Filter by device status. Can include multiple values separated by
+            commas. 'active' means not archived, not blocked, and if approval is
+            enabled, approved. 'pending' and 'denied' are only applicable if
+            approval is enabled.
+          name: status
           in: query
       responses: {}
   /org/{orgId}/client/{niceId}:

@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/groteck/terraform-provider-pangolin/internal/client"
+	"github.com/gmpinder/terraform-provider-pangolin/internal/client"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
@@ -42,7 +42,7 @@ func (p *pangolinProvider) Schema(_ context.Context, _ provider.SchemaRequest, r
 				Description: "Pangolin API base URL. Can also be set via the PANGOLIN_BASE_URL environment variable. Defaults to https://api.pangolin.net/v1",
 			},
 			"token": schema.StringAttribute{
-				Required:    true,
+				Optional:    true,
 				Sensitive:   true,
 				Description: "Pangolin API token. Can also be set via the PANGOLIN_TOKEN environment variable.",
 			},
@@ -86,9 +86,11 @@ func (p *pangolinProvider) Configure(ctx context.Context, req provider.Configure
 func (p *pangolinProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewSiteResource,
+		NewSiteResourceResource,
 		NewTargetResource,
 		NewRoleResource,
 		NewResourceResource,
+		NewRuleResource,
 	}
 }
 

@@ -5,7 +5,7 @@ import (
 	"flag"
 	"log"
 
-	"github.com/groteck/terraform-provider-pangolin/provider"
+	"github.com/gmpinder/terraform-provider-pangolin/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 )
 
@@ -22,7 +22,7 @@ func main() {
 	flag.Parse()
 
 	opts := providerserver.ServeOpts{
-		Address: "registry.terraform.io/groteck/pangolin",
+		Address: "registry.terraform.io/gmpinder/pangolin",
 		Debug:   debug,
 	}
 

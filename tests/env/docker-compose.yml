@@ -1,4 +1,25 @@
 services:
+  gerbil:
+    image: docker.io/fosrl/gerbil:1.3.0
+    container_name: gerbil
+    restart: unless-stopped
+    depends_on:
+      pangolin:
+        condition: service_healthy
+    command:
+      - --reachableAt=http://gerbil:3004
+      - --generateAndSaveKeyTo=/var/config/key
+      - --remoteConfig=http://pangolin:3001/api/v1/
+    volumes:
+      - ./config/:/var/config
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    ports:
+      - 51820:51820/udp
+      - 21820:21820/udp
+      - 443:443
+      - 80:80
   pangolin:
     image: docker.io/fosrl/pangolin:latest
     container_name: pangolin-test

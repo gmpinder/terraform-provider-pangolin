@@ -19,9 +19,9 @@ test-save-gold:
 
 # Reset the active DB from the gold template
 test-reset:
-	docker compose -f tests/env/docker-compose.yml stop pangolin
+	docker compose -f tests/env/docker-compose.yml stop pangolin gerbil
 	cp tests/fixtures/db.sqlite.gold tests/env/config/db/db.sqlite
-	docker compose -f tests/env/docker-compose.yml start pangolin
+	docker compose -f tests/env/docker-compose.yml start pangolin gerbil
 	@echo "Waiting for Pangolin API to be healthy..."
 	@until curl -s -f http://localhost:3000/api/v1/ > /dev/null; do sleep 1; done
 	@echo "API is up."
@@ -29,6 +29,9 @@ test-reset:
 # Run Acceptance Tests (requires gold DB and env vars)
 test-acc: test-reset
 	ASDF_TERRAFORM_VERSION=1.10.0 TF_ACC=1 go test -v ./provider/...
+
+test-example: test-reset
+	./tests/test-example-main.sh
 
 # Generate documentation
 docs:

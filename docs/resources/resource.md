@@ -28,16 +28,39 @@ resource "pangolin_resource" "example" {
 
 ### Required
 
-- `domain_id` (String) The ID of the domain.
+- `http` (Boolean) Whether the resource is an HTTP resource.
 - `name` (String) The name of the resource.
 - `org_id` (String) The ID of the organization.
 - `protocol` (String) The protocol of the resource (tcp or udp).
-- `subdomain` (String) The subdomain for the resource.
 
 ### Optional
 
-- `http` (Boolean) Whether the resource is an HTTP resource.
+- `apply_rules` (Boolean) Apply block list rules.
+- `block_access` (Boolean) Block access to the resource.
+- `domain_id` (String) The ID of the domain. Requires `http` to be true.
+- `email_whitelist_enabled` (Boolean) Allow whitelisting access based on email address. Requires SMTP to be setup.
+- `enabled` (Boolean) Enable the resource.
+- `headers` (Attributes List) List of headers to set when forwarding requests. (see [below for nested schema](#nestedatt--headers))
+- `host_header` (String) Set a custom host header to set for requests.
+- `nice_id` (String) The unique, human-readable ID of the resource.
+- `post_auth_path` (String) The HTTP path of the resource to shared. Requires `http` to be true.
+- `proxy_port` (Number) The port to proxy if `http` is false
+- `proxy_protocol` (Boolean) Enable the proxy protocol.
+- `proxy_protocol_version` (Number) Version 1 is text-based and widely supported. Version 2 is binary and more efficient but less compatible. Make sure servers transport is added to dynamic config.
+- `ssl` (Boolean) Enable SSL for the resource.
+- `sso` (Boolean) Allow Pangolin SSO auth.
+- `sticky_session` (Boolean) Whether or not to enable sticky sessions. Requires `http` to be true.
+- `subdomain` (String) The subdomain for the resource. Requires `http` to be true.
+- `tls_server_name` (String) The hostname expected by the SSL endpoint
 
 ### Read-Only
 
 - `id` (Number) The ID of the resource.
+
+<a id="nestedatt--headers"></a>
+### Nested Schema for `headers`
+
+Required:
+
+- `name` (String) Header name.
+- `value` (String) Header value.

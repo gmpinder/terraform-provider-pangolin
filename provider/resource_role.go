@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/groteck/terraform-provider-pangolin/internal/client"
+	"github.com/gmpinder/terraform-provider-pangolin/internal/client"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"

@@ -1,4 +1,4 @@
-module github.com/groteck/terraform-provider-pangolin
+module github.com/gmpinder/terraform-provider-pangolin
 
 go 1.24.0
 

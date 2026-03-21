@@ -3,7 +3,7 @@ package provider
 import (
 	"testing"
 
-	"github.com/groteck/terraform-provider-pangolin/internal/client"
+	"github.com/gmpinder/terraform-provider-pangolin/internal/client"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 )
@@ -27,24 +27,4 @@ func testAccPreCheck(t *testing.T) {
 	if err != nil {
 		t.Fatalf("API unreachable or invalid credentials: %v", err)
 	}
-}
-
-func getTestSiteID(t *testing.T) int {
-	c := client.NewClient(testURL, testToken)
-	sites, err := c.ListSites(testOrgID)
-	if err != nil {
-		t.Fatalf("failed to list sites: %v", err)
-	}
-
-	if len(sites) > 0 {
-		return sites[0].ID
-	}
-
-	// Create one if it doesn't exist
-	site, err := c.CreateSite(testOrgID, "Test Site")
-	if err != nil {
-		t.Fatalf("failed to create test site: %v", err)
-	}
-
-	return site.ID
 }
