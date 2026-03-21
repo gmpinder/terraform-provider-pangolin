@@ -9,13 +9,14 @@ import (
 
 	"github.com/gmpinder/terraform-provider-pangolin/internal/client"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	// "github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -123,28 +124,37 @@ func (r *siteResourceResource) Schema(_ context.Context, _ resource.SchemaReques
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
-				Default: listdefault.StaticValue(
-					types.ListValueMust(types.StringType, make([]attr.Value, 0)),
-				),
+				// Default: listdefault.StaticValue(
+				// 	types.ListValueMust(types.StringType, make([]attr.Value, 0)),
+				// ),
 				MarkdownDescription: "The list of user IDs allowed to access this resource.",
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"role_ids": schema.ListAttribute{
 				ElementType: types.Int64Type,
 				Optional:    true,
 				Computed:    true,
-				Default: listdefault.StaticValue(
-					types.ListValueMust(types.Int64Type, make([]attr.Value, 0)),
-				),
+				// Default: listdefault.StaticValue(
+				// 	types.ListValueMust(types.Int64Type, make([]attr.Value, 0)),
+				// ),
 				MarkdownDescription: "The list of role IDs allowed to access this resource.",
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"client_ids": schema.ListAttribute{
 				ElementType: types.Int64Type,
 				Optional:    true,
 				Computed:    true,
-				Default: listdefault.StaticValue(
-					types.ListValueMust(types.Int64Type, make([]attr.Value, 0)),
-				),
+				// Default: listdefault.StaticValue(
+				// 	types.ListValueMust(types.Int64Type, make([]attr.Value, 0)),
+				// ),
 				MarkdownDescription: "The list of client IDs allowed to access this resource.",
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"tcp_port_range_string": schema.StringAttribute{
 				Optional:            true,
@@ -211,16 +221,23 @@ func (r *siteResourceResource) Create(ctx context.Context, req resource.CreateRe
 		TCPPortRangeString: data.TCPPortRangeString.ValueStringPointer(),
 		UDPPortRangeString: data.UDPPortRangeString.ValueStringPointer(),
 		DisableIcmp:        data.DisableIcmp.ValueBoolPointer(),
+		Alias:              data.Alias.ValueStringPointer(),
+		UserIDs:            make([]string, 0),
+		RoleIDs:            make([]int64, 0),
+		ClientIDs:          make([]int64, 0),
 	}
 
-	if !data.Alias.IsNull() {
-		s := data.Alias.ValueString()
-		res.Alias = &s
+	if !data.UserIDs.IsUnknown() {
+		resp.Diagnostics.Append(data.UserIDs.ElementsAs(ctx, &res.UserIDs, false)...)
 	}
 
-	resp.Diagnostics.Append(data.UserIDs.ElementsAs(ctx, &res.UserIDs, false)...)
-	resp.Diagnostics.Append(data.RoleIDs.ElementsAs(ctx, &res.RoleIDs, false)...)
-	resp.Diagnostics.Append(data.ClientIDs.ElementsAs(ctx, &res.ClientIDs, false)...)
+	if !data.RoleIDs.IsUnknown() {
+		resp.Diagnostics.Append(data.RoleIDs.ElementsAs(ctx, &res.RoleIDs, false)...)
+	}
+
+	if !data.ClientIDs.IsUnknown() {
+		resp.Diagnostics.Append(data.ClientIDs.ElementsAs(ctx, &res.ClientIDs, false)...)
+	}
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -235,6 +252,18 @@ func (r *siteResourceResource) Create(ctx context.Context, req resource.CreateRe
 	data.ID = types.Int64PointerValue(created.ID)
 	data.NiceID = types.StringPointerValue(created.NiceID)
 
+	roles, diags := types.ListValueFrom(ctx, types.Int64Type, res.RoleIDs)
+	resp.Diagnostics.Append(diags...)
+	data.RoleIDs = roles
+
+	users, diags := types.ListValueFrom(ctx, types.StringType, res.UserIDs)
+	resp.Diagnostics.Append(diags...)
+	data.UserIDs = users
+
+	clients, diags := types.ListValueFrom(ctx, types.Int64Type, res.ClientIDs)
+	resp.Diagnostics.Append(diags...)
+	data.ClientIDs = clients
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -246,7 +275,7 @@ func (r *siteResourceResource) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	res, err := r.client.GetSiteResource(data.OrgID.ValueString(), data.SiteID.ValueInt64(), data.ID.ValueInt64())
+	res, err := r.client.GetSiteResource(data.OrgID.ValueString(), data.ID.ValueInt64())
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading site resource", err.Error())
 		return
@@ -262,25 +291,33 @@ func (r *siteResourceResource) Read(ctx context.Context, req resource.ReadReques
 	data.UDPPortRangeString = types.StringPointerValue(res.UDPPortRangeString)
 	data.DisableIcmp = types.BoolPointerValue(res.DisableIcmp)
 
-	roleIDs, err := r.client.GetSiteResourceRoles(int(data.ID.ValueInt64()))
-	if err == nil {
-		roleIDsList, diags := types.ListValueFrom(ctx, types.Int64Type, roleIDs)
+	roleIDs, err := r.client.GetSiteResourceRoles(data.ID.ValueInt64())
+
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to get roles for site resource", err.Error())
+	} else {
+		roles, diags := types.ListValueFrom(ctx, types.Int64Type, roleIDs)
 		resp.Diagnostics.Append(diags...)
-		data.RoleIDs = roleIDsList
+		data.RoleIDs = roles
 	}
 
-	userIDs, err := r.client.GetSiteResourceUsers(int(data.ID.ValueInt64()))
-	if err == nil {
-		userIDsList, diags := types.ListValueFrom(ctx, types.StringType, userIDs)
+	userIDs, err := r.client.GetSiteResourceUsers(data.ID.ValueInt64())
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to get roles for site resource", err.Error())
+	} else {
+
+		users, diags := types.ListValueFrom(ctx, types.StringType, userIDs)
 		resp.Diagnostics.Append(diags...)
-		data.UserIDs = userIDsList
+		data.UserIDs = users
 	}
 
-	clientIDs, err := r.client.GetSiteResourceClients(int(data.ID.ValueInt64()))
-	if err == nil {
-		clientIDsList, diags := types.ListValueFrom(ctx, types.Int64Type, clientIDs)
+	clientIDs, err := r.client.GetSiteResourceClients(data.ID.ValueInt64())
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to get roles for site resource", err.Error())
+	} else {
+		clients, diags := types.ListValueFrom(ctx, types.Int64Type, clientIDs)
 		resp.Diagnostics.Append(diags...)
-		data.ClientIDs = clientIDsList
+		data.ClientIDs = clients
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -319,7 +356,7 @@ func (r *siteResourceResource) Update(ctx context.Context, req resource.UpdateRe
 		return
 	}
 
-	_, err := r.client.UpdateSiteResource(int(state.ID.ValueInt64()), res)
+	_, err := r.client.UpdateSiteResource(state.ID.ValueInt64(), res)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating site resource", err.Error())
 		return
@@ -338,7 +375,7 @@ func (r *siteResourceResource) Delete(ctx context.Context, req resource.DeleteRe
 		return
 	}
 
-	err := r.client.DeleteSiteResource(int(data.ID.ValueInt64()))
+	err := r.client.DeleteSiteResource(data.ID.ValueInt64())
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting site resource", err.Error())
 		return

@@ -17,7 +17,7 @@ type SiteResource struct {
 	Enabled            *bool    `json:"enabled,omitempty"`
 	Alias              *string  `json:"alias,omitempty"`
 	UserIDs            []string `json:"userIds"`
-	RoleIDs            []int64  `json:"roleIds,omitempty"`
+	RoleIDs            []int64  `json:"roleIds"`
 	ClientIDs          []int64  `json:"clientIds"`
 	TCPPortRangeString *string  `json:"tcpPortRangeString,omitempty"`
 	UDPPortRangeString *string  `json:"udpPortRangeString,omitempty"`
@@ -48,21 +48,21 @@ func (c *Client) ListSiteResources(orgID string) ([]SiteResource, error) {
 	return out.SiteResources, err
 }
 
-func (c *Client) GetSiteResource(orgID string, siteID int64, resID int64) (*SiteResource, error) {
+func (c *Client) GetSiteResource(orgID string, resID int64) (*SiteResource, error) {
 	srList, err := c.ListSiteResources(orgID)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, sr := range srList {
-		if *sr.SiteID == siteID {
+		if *sr.ID == resID {
 			return &sr, nil
 		}
 	}
-	return nil, fmt.Errorf("failed to find site resource %d for org %s", siteID, orgID)
+	return nil, fmt.Errorf("failed to find site resource %d for org %s", resID, orgID)
 }
 
-func (c *Client) UpdateSiteResource(resID int, res *SiteResource) (*SiteResource, error) {
+func (c *Client) UpdateSiteResource(resID int64, res *SiteResource) (*SiteResource, error) {
 	path := fmt.Sprintf("/site-resource/%d", resID)
 	data, err := c.doRequest("POST", path, res)
 	if err != nil {
@@ -73,13 +73,13 @@ func (c *Client) UpdateSiteResource(resID int, res *SiteResource) (*SiteResource
 	return &out, err
 }
 
-func (c *Client) DeleteSiteResource(resID int) error {
+func (c *Client) DeleteSiteResource(resID int64) error {
 	path := fmt.Sprintf("/site-resource/%d", resID)
 	_, err := c.doRequest("DELETE", path, nil)
 	return err
 }
 
-func (c *Client) GetSiteResourceRoles(resID int) ([]int, error) {
+func (c *Client) GetSiteResourceRoles(resID int64) ([]int, error) {
 	path := fmt.Sprintf("/site-resource/%d/roles", resID)
 	data, err := c.doRequest("GET", path, nil)
 	if err != nil {
@@ -104,7 +104,7 @@ func (c *Client) GetSiteResourceRoles(resID int) ([]int, error) {
 	return ids, nil
 }
 
-func (c *Client) GetSiteResourceUsers(resID int) ([]string, error) {
+func (c *Client) GetSiteResourceUsers(resID int64) ([]string, error) {
 	path := fmt.Sprintf("/site-resource/%d/users", resID)
 	data, err := c.doRequest("GET", path, nil)
 	if err != nil {
@@ -125,7 +125,7 @@ func (c *Client) GetSiteResourceUsers(resID int) ([]string, error) {
 	return ids, nil
 }
 
-func (c *Client) GetSiteResourceClients(resID int) ([]int, error) {
+func (c *Client) GetSiteResourceClients(resID int64) ([]int, error) {
 	path := fmt.Sprintf("/site-resource/%d/clients", resID)
 	data, err := c.doRequest("GET", path, nil)
 	if err != nil {

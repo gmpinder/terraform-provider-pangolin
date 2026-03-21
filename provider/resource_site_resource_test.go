@@ -66,5 +66,14 @@ resource "pangolin_site_resource" "test" {
   udp_port_range_string = "*"
   disable_icmp          = false
 }
+
+resource "pangolin_site_resource" "test_1" {
+  org_id      = %[3]q
+  site_id     = pangolin_site.test.id
+  name        = %[4]q
+  mode        = %[5]q
+  destination = %[6]q
+  alias       = "other-test.localhost"
+}
 `, testURL, testToken, testOrgID, name, mode, destination, alias)
 }
