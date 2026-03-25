@@ -3,12 +3,12 @@
 page_title: "pangolin_site Resource - pangolin"
 subcategory: ""
 description: |-
-  Manages an organization role.
+  Manages a site.
 ---
 
 # pangolin_site (Resource)
 
-Manages an organization role.
+Manages a site.
 
 
 

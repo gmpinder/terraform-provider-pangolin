@@ -6,8 +6,8 @@ The Pangolin provider allows you to manage resources on [Pangolin](https://pango
 
 ```terraform
 provider "pangolin" {
-  # token    = var.pangolin_token
-  # base_url = "https://api.pangolin.net/v1"
+  token    = "YOUR_TOKEN"
+  base_url = "https://api.pangolin.net/v1"
 }
 ```
 

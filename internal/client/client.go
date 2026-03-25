@@ -32,7 +32,7 @@ type apiResponse struct {
 	Message string          `json:"message"`
 }
 
-func (c *Client) doRequest(method, path string, body interface{}) ([]byte, error) {
+func (c *Client) doRequest(method, path string, body any) ([]byte, error) {
 	var bodyReader io.Reader
 	if body != nil {
 		jsonBody, err := json.Marshal(body)

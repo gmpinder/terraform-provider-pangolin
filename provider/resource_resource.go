@@ -132,6 +132,9 @@ func (r *resourceResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				Validators: []validator.String{
 					stringvalidator.OneOf("tcp", "udp"),
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"enabled": schema.BoolAttribute{
 				Optional:            true,
@@ -372,8 +375,6 @@ func (r *resourceResource) Create(ctx context.Context, req resource.CreateReques
 		createResource.PostAuthPath = data.PostAuthPath.ValueStringPointer()
 	} else {
 		createResource.ProxyPort = data.ProxyPort.ValueInt32Pointer()
-		createResource.ProxyProtocol = data.ProxyProtocol.ValueBoolPointer()
-		createResource.ProxyProtocolVersion = data.ProxyProtocolVersion.ValueInt32Pointer()
 	}
 
 	created, err := r.client.CreateResource(data.OrgID.ValueString(), createResource)
@@ -419,16 +420,21 @@ func (r *resourceResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	updateResource := &client.Resource{
-		EmailWhitelistEnabled: data.EmailWhitelistEnabled.ValueBoolPointer(),
-		ApplyRules:            data.ApplyRules.ValueBoolPointer(),
-		NiceID:                data.NiceId.ValueStringPointer(),
-		Ssl:                   data.Ssl.ValueBoolPointer(),
-		BlockAccess:           data.BlockAccess.ValueBoolPointer(),
-		Sso:                   data.Sso.ValueBoolPointer(),
-		Enabled:               data.Enabled.ValueBoolPointer(),
-		TlsServerName:         data.TlsServerName.ValueStringPointer(),
-		SetHostHeader:         data.SetHostHeader.ValueStringPointer(),
-		Headers:               headers,
+		Enabled: data.Enabled.ValueBoolPointer(),
+		NiceID:  data.NiceId.ValueStringPointer(),
+	}
+	if *created.Http {
+		updateResource.EmailWhitelistEnabled = data.EmailWhitelistEnabled.ValueBoolPointer()
+		updateResource.ApplyRules = data.ApplyRules.ValueBoolPointer()
+		updateResource.Ssl = data.Ssl.ValueBoolPointer()
+		updateResource.BlockAccess = data.BlockAccess.ValueBoolPointer()
+		updateResource.Sso = data.Sso.ValueBoolPointer()
+		updateResource.TlsServerName = data.TlsServerName.ValueStringPointer()
+		updateResource.SetHostHeader = data.SetHostHeader.ValueStringPointer()
+		updateResource.Headers = headers
+	} else {
+		updateResource.ProxyProtocol = data.ProxyProtocol.ValueBoolPointer()
+		updateResource.ProxyProtocolVersion = data.ProxyProtocolVersion.ValueInt32Pointer()
 	}
 
 	updated, err := r.client.UpdateResource(*created.ID, updateResource)
@@ -538,7 +544,6 @@ func (r *resourceResource) Update(ctx context.Context, req resource.UpdateReques
 		res.PostAuthPath = data.PostAuthPath.ValueStringPointer()
 		res.Headers = headers
 	} else {
-		res.Protocol = data.Protocol.ValueStringPointer()
 		res.ProxyPort = data.ProxyPort.ValueInt32Pointer()
 		res.ProxyProtocol = data.ProxyProtocol.ValueBoolPointer()
 		res.ProxyProtocolVersion = data.ProxyProtocolVersion.ValueInt32Pointer()

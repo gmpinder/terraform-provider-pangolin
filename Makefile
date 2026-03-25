@@ -6,7 +6,7 @@ test-env-up:
 
 # Stop the test environment
 test-env-down:
-	docker compose -f tests/env/docker-compose.yml stop
+	docker compose -f tests/env/docker-compose.yml down
 
 # Clean up everything (use with caution)
 test-env-clean:
@@ -29,9 +29,6 @@ test-reset:
 # Run Acceptance Tests (requires gold DB and env vars)
 test-acc: test-reset
 	ASDF_TERRAFORM_VERSION=1.10.0 TF_ACC=1 go test -v ./provider/...
-
-test-example: test-reset
-	./tests/test-example-main.sh
 
 # Generate documentation
 docs:

@@ -50,7 +50,7 @@ func (r *siteResource) Metadata(_ context.Context, req resource.MetadataRequest,
 
 func (r *siteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages an organization role.",
+		MarkdownDescription: "Manages a site.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
 				Computed:            true,
