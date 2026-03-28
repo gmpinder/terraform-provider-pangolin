@@ -125,3 +125,40 @@ func (c *Client) DeleteResource(resID int64) error {
 	_, err := c.doRequest("DELETE", path, nil)
 	return err
 }
+
+func (c *Client) GetEmailWhiteList(resdID int64) ([]string, error) {
+	path := fmt.Sprintf("/resource/%d/whitelist", resdID)
+	data, err := c.doRequest("GET", path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	type email struct {
+		Email string `json:"email"`
+	}
+	var wrapper struct {
+		Whitelist []email `json:"whitelist"`
+	}
+	err = json.Unmarshal(data, &wrapper)
+
+	if err != nil {
+		return nil, err
+	}
+
+	list := make([]string, len(wrapper.Whitelist))
+
+	for i, value := range wrapper.Whitelist {
+		list[i] = value.Email
+	}
+	return list, nil
+}
+
+func (c *Client) UpdateEmailWhitelist(resID int64, emailAddresses []string) error {
+	path := fmt.Sprintf("/resource/%d/whitelist", resID)
+	var wrapper struct {
+		Emails []string `json:"emails"`
+	}
+	wrapper.Emails = emailAddresses
+	_, err := c.doRequest("POST", path, wrapper)
+	return err
+}

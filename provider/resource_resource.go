@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -18,6 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -58,6 +61,7 @@ type resourceResourceModel struct {
 	ProxyProtocol         types.Bool   `tfsdk:"proxy_protocol"`
 	ProxyProtocolVersion  types.Int32  `tfsdk:"proxy_protocol_version"`
 	PostAuthPath          types.String `tfsdk:"post_auth_path"`
+	EmailWhiteList        types.List   `tfsdk:"email_whitelist"`
 }
 
 type resourceHeader struct {
@@ -86,6 +90,7 @@ func (r *resourceResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 		path.MatchRoot("host_header"),
 		path.MatchRoot("email_whitelist_enabled"),
 		path.MatchRoot("block_access"),
+		path.MatchRoot("email_whitelist"),
 	}
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages an app-style resource (HTTP/TCP/UDP).",
@@ -267,6 +272,21 @@ func (r *resourceResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"email_whitelist": schema.ListAttribute{
+				Optional:            true,
+				Computed:            true,
+				MarkdownDescription: "The list of email addresses to add to the whitelist.",
+				Default:             listdefault.StaticValue(types.ListValueMust(types.StringType, []attr.Value{})),
+				ElementType:         types.StringType,
+				Validators: []validator.List{
+					listvalidator.AlsoRequires(path.MatchRoot("email_whitelist_enabled")),
+					listvalidator.UniqueValues(),
+					listvalidator.ConflictsWith(proxyExpressions...),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"apply_rules": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
@@ -340,6 +360,10 @@ func (r *resourceResource) Create(ctx context.Context, req resource.CreateReques
 
 	if !data.Http.ValueBool() && data.ProxyPort.IsNull() {
 		resp.Diagnostics.AddError("`proxy_port` is null", "`proxy_port` must not be null if `http` is false.")
+	}
+
+	if !data.EmailWhitelistEnabled.ValueBool() && len(data.EmailWhiteList.Elements()) > 0 {
+		resp.Diagnostics.AddError("`email_whitelist_enabled` is `false`", "`email_whitelist_enabled` must be `true` to set `email_whitelist`")
 	}
 
 	var headers []client.ResourceHeader
@@ -452,6 +476,21 @@ func (r *resourceResource) Create(ctx context.Context, req resource.CreateReques
 		data.ProxyProtocol = types.BoolPointerValue(updated.ProxyProtocol)
 	}
 
+	if data.EmailWhitelistEnabled.ValueBool() {
+		var emails []string
+		diags := data.EmailWhiteList.ElementsAs(ctx, &emails, false)
+
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+		} else {
+			err = r.client.UpdateEmailWhitelist(*created.ID, emails)
+
+			if err != nil {
+				resp.Diagnostics.AddError("error updating email whitelist", err.Error())
+			}
+		}
+	}
+
 	data.ID = types.Int64PointerValue(created.ID)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -491,6 +530,21 @@ func (r *resourceResource) Read(ctx context.Context, req resource.ReadRequest, r
 	data.Subdomain = types.StringPointerValue(res.Subdomain)
 	data.TlsServerName = types.StringPointerValue(res.TlsServerName)
 
+	if data.EmailWhitelistEnabled.ValueBool() {
+		emails, err := r.client.GetEmailWhiteList(*res.ID)
+		if err != nil {
+			resp.Diagnostics.AddError("error reading email whitelist", err.Error())
+			return
+		}
+		list, diags := types.ListValueFrom(ctx, types.StringType, emails)
+
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+		} else {
+			data.EmailWhiteList = list
+		}
+	}
+
 	if len(res.Headers) > 0 {
 		rHeaders := make([]resourceHeader, len(res.Headers))
 
@@ -510,6 +564,10 @@ func (r *resourceResource) Update(ctx context.Context, req resource.UpdateReques
 	var data, state resourceResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+
+	if !data.EmailWhitelistEnabled.ValueBool() && len(data.EmailWhiteList.Elements()) > 0 {
+		resp.Diagnostics.AddError("`email_whitelist_enabled` is `false`", "`email_whitelist_enabled` must be `true` to set `email_whitelist`")
+	}
 
 	var headers []client.ResourceHeader
 
@@ -560,6 +618,21 @@ func (r *resourceResource) Update(ctx context.Context, req resource.UpdateReques
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating resource", err.Error())
 		return
+	}
+
+	if data.EmailWhitelistEnabled.ValueBool() {
+		var emails []string
+		diags := data.EmailWhiteList.ElementsAs(ctx, &emails, false)
+
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+		} else {
+			err = r.client.UpdateEmailWhitelist(state.ID.ValueInt64(), emails)
+
+			if err != nil {
+				resp.Diagnostics.AddError("error updating email whitelist", err.Error())
+			}
+		}
 	}
 
 	data.ID = state.ID

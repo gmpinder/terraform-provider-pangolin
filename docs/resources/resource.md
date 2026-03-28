@@ -38,6 +38,7 @@ resource "pangolin_resource" "example" {
 - `apply_rules` (Boolean) Apply block list rules.
 - `block_access` (Boolean) Block access to the resource.
 - `domain_id` (String) The ID of the domain. Requires `http` to be true.
+- `email_whitelist` (List of String) The list of email addresses to add to the whitelist.
 - `email_whitelist_enabled` (Boolean) Allow whitelisting access based on email address. Requires SMTP to be setup.
 - `enabled` (Boolean) Enable the resource.
 - `headers` (Attributes List) List of headers to set when forwarding requests. (see [below for nested schema](#nestedatt--headers))
