@@ -346,7 +346,7 @@ func (r *resourceResource) Create(ctx context.Context, req resource.CreateReques
 
 	if !data.Headers.IsNull() {
 		h := make([]resourceHeader, len(data.Headers.Elements()))
-		resp.Diagnostics.Append(data.Headers.ElementsAs(ctx, &headers, false)...)
+		resp.Diagnostics.Append(data.Headers.ElementsAs(ctx, &h, false)...)
 
 		headers = make([]client.ResourceHeader, len(h))
 
@@ -470,10 +470,6 @@ func (r *resourceResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	data.ApplyRules = types.BoolPointerValue(res.ApplyRules)
 	data.BlockAccess = types.BoolPointerValue(res.BlockAccess)
 	data.DomainID = types.StringPointerValue(res.DomainID)
@@ -495,8 +491,19 @@ func (r *resourceResource) Read(ctx context.Context, req resource.ReadRequest, r
 	data.Subdomain = types.StringPointerValue(res.Subdomain)
 	data.TlsServerName = types.StringPointerValue(res.TlsServerName)
 
+	if len(res.Headers) > 0 {
+		rHeaders := make([]resourceHeader, len(res.Headers))
+
+		for i, header := range res.Headers {
+			rHeaders[i] = resourceHeader{
+				Name:  types.StringValue(header.Name),
+				Value: types.StringValue(header.Value),
+			}
+		}
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("headers"), rHeaders)...)
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("headers"), res.Headers)...)
 }
 
 func (r *resourceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -508,7 +515,7 @@ func (r *resourceResource) Update(ctx context.Context, req resource.UpdateReques
 
 	if !data.Headers.IsNull() {
 		h := make([]resourceHeader, len(data.Headers.Elements()))
-		resp.Diagnostics.Append(data.Headers.ElementsAs(ctx, &headers, false)...)
+		resp.Diagnostics.Append(data.Headers.ElementsAs(ctx, &h, false)...)
 
 		headers = make([]client.ResourceHeader, len(h))
 
