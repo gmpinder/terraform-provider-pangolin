@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0](https://github.com/gmpinder/terraform-provider-pangolin/compare/v1.1.0...v1.2.0) (2026-03-28)
+
+
+### Features
+
+* Add email_whitelist property for pangolin_resource ([72f4504](https://github.com/gmpinder/terraform-provider-pangolin/commit/72f45040051759228779ea5f8296395b3c9cffe9))
+
+
+### Bug Fixes
+
+* Read headers properly ([40f35b4](https://github.com/gmpinder/terraform-provider-pangolin/commit/40f35b4c0a6cf1e8345f48981550c612b4caf750))
+* Update docs and fix TCP/UDP based deployments ([5df7e93](https://github.com/gmpinder/terraform-provider-pangolin/commit/5df7e936a5cf3705b3523d54b2a2195b3ca2471d))
+
 ## [1.1.0](https://github.com/gmpinder/terraform-provider-pangolin/compare/v1.0.0...v1.1.0) (2026-03-21)
 
 
