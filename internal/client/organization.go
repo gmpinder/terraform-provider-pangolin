@@ -7,30 +7,23 @@ import (
 
 // Organization definitions
 type Organization struct {
-	OrgId                           string  `json:"orgId"`
-	Name                            string  `json:"name"`
-	Subnet                          string  `json:"subnet"`
-	UtilitySubnet                   string  `json:"utilitySubnet"`
-	CreatedAt                       *string `json:"createdAt,omitempty"`
+	ID                              *string `json:"orgId,omitempty"`
+	Name                            *string `json:"name,omitempty"`
+	Subnet                          *string `json:"subnet,omitempty"`        // default: 100.90.128.0/24
+	UtilitySubnet                   *string `json:"utilitySubnet,omitempty"` // default: 100.96.128.0/24
 	RequireTwoFactor                *bool   `json:"requireTwoFactor,omitempty"`
-	MaxSessionLengthHours           *int    `json:"maxSessionLengthHours,omitempty"`
-	PasswordExpiryDays              *int    `json:"passwordExpiryDays,omitempty"`
-	SettingsLogRetentionDaysRequest *int    `json:"settingsLogRetentionDaysRequest,omitempty"`
-	SettingsLogRetentionDaysAccess  *int    `json:"settingsLogRetentionDaysAccess,omitempty"`
-	SettingsLogRetentionDaysAction  *int    `json:"settingsLogRetentionDaysAction,omitempty"`
-	SshCaPrivateKey                 *string `json:"sshCaPrivateKey,omitempty"`
-	SshCaPublicKey                  *string `json:"sshCaPublicKey,omitempty"`
-	IsBillingOrg                    *bool   `json:"isBillingOrg,omitempty"`
-	BillingOrgId                    *string `json:"billingOrgId,omitempty"`
+	MaxSessionLengthHours           *int32  `json:"maxSessionLengthHours,omitempty"`
+	PasswordExpiryDays              *int32  `json:"passwordExpiryDays,omitempty"`
+	SettingsLogRetentionDaysRequest *int32  `json:"settingsLogRetentionDaysRequest,omitempty"`
+	SettingsLogRetentionDaysAccess  *int32  `json:"settingsLogRetentionDaysAccess,omitempty"`
+	SettingsLogRetentionDaysAction  *int32  `json:"settingsLogRetentionDaysAction,omitempty"`
 }
 
 func (c *Client) CreateOrganization(org *Organization) (*Organization, error) {
 	data, err := c.doRequest("PUT", "/org", org)
-
 	if err != nil {
 		return nil, err
 	}
-
 	var out Organization
 	err = json.Unmarshal(data, &out)
 	return &out, err
@@ -42,7 +35,17 @@ func (c *Client) GetOrganization(orgID string) (*Organization, error) {
 	if err != nil {
 		return nil, err
 	}
+	var out Organization
+	err = json.Unmarshal(data, &out)
+	return &out, err
+}
 
+func (c *Client) UpdateOrganization(orgID string, org *Organization) (*Organization, error) {
+	path := fmt.Sprintf("/org/%s", orgID)
+	data, err := c.doRequest("POST", path, org)
+	if err != nil {
+		return nil, err
+	}
 	var out Organization
 	err = json.Unmarshal(data, &out)
 	return &out, err
@@ -51,21 +54,5 @@ func (c *Client) GetOrganization(orgID string) (*Organization, error) {
 func (c *Client) DeleteOrganization(orgID string) error {
 	path := fmt.Sprintf("/org/%s", orgID)
 	_, err := c.doRequest("DELETE", path, nil)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c *Client) ListOrganizations() ([]Organization, error) {
-	data, err := c.doRequest("GET", "/orgs?limit=1000&offset=0", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	var out struct {
-		Orgs []Organization `json:"orgs"`
-	}
-	err = json.Unmarshal(data, &out)
-	return out.Orgs, err
+	return err
 }

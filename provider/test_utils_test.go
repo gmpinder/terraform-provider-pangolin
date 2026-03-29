@@ -10,7 +10,8 @@ import (
 
 const (
 	testOrgID = "test-tf"
-	testToken = "f1l1v68jvs2j8ix.34fvctzav5t46kdnchztxz6u5ajfxt5wobs4iulv"
+	// testToken = "f1l1v68jvs2j8ix.34fvctzav5t46kdnchztxz6u5ajfxt5wobs4iulv"
+	testToken = "0fbnhkwopkmxah6.bczvbtsd7tmrfubagosmgcyjezsw5rzvsi2cugdy"
 	testURL   = "http://localhost:3003/v1" // Integration API port and prefix
 )
 
