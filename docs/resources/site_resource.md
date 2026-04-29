@@ -36,7 +36,7 @@ resource "pangolin_site_resource" "example" {
 - `mode` (String) The mode of the resource (host or cidr).
 - `name` (String) The name of the site resource.
 - `org_id` (String) The ID of the organization.
-- `site_id` (Number) The ID of the site.
+- `site_ids` (List of Number) The ID of the site.
 
 ### Optional
 
