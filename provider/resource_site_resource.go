@@ -9,6 +9,7 @@ import (
 
 	"github.com/gmpinder/terraform-provider-pangolin/internal/client"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -24,6 +25,254 @@ import (
 
 var _ resource.Resource = &siteResourceResource{}
 var _ resource.ResourceWithImportState = &siteResourceResource{}
+var _ resource.ResourceWithUpgradeState = &siteResourceResource{}
+var schemaV0 = schema.Schema{
+	MarkdownDescription: "Manages a site resource (Host or CIDR mode).",
+	Attributes: map[string]schema.Attribute{
+		"id": schema.Int64Attribute{
+			Computed:            true,
+			MarkdownDescription: "The ID of the site resource.",
+			PlanModifiers: []planmodifier.Int64{
+				int64planmodifier.UseStateForUnknown(),
+			},
+		},
+		"nice_id": schema.StringAttribute{
+			Computed:            true,
+			MarkdownDescription: "The human-readable ID of the site resource.",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"org_id": schema.StringAttribute{
+			Required:            true,
+			MarkdownDescription: "The ID of the organization.",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+			},
+		},
+		"name": schema.StringAttribute{
+			Required:            true,
+			MarkdownDescription: "The name of the site resource.",
+		},
+		"mode": schema.StringAttribute{
+			Required:            true,
+			MarkdownDescription: "The mode of the resource (host or cidr).",
+			Validators: []validator.String{
+				stringvalidator.OneOf("host", "cidr"),
+			},
+		},
+		"site_id": schema.Int64Attribute{
+			Required:            true,
+			MarkdownDescription: "The ID of the site.",
+			PlanModifiers: []planmodifier.Int64{
+				int64planmodifier.RequiresReplace(),
+			},
+		},
+		"destination": schema.StringAttribute{
+			Required:            true,
+			MarkdownDescription: "The destination address or CIDR.",
+		},
+		"enabled": schema.BoolAttribute{
+			Optional:            true,
+			Computed:            true,
+			Default:             booldefault.StaticBool(true),
+			MarkdownDescription: "Whether the resource is enabled.",
+		},
+		"alias": schema.StringAttribute{
+			Optional:            true,
+			MarkdownDescription: "The alias for the resource.",
+			Validators: []validator.String{
+				stringvalidator.RegexMatches(
+					regexp.MustCompile(`^(?:[a-zA-Z0-9*?](?:[a-zA-Z0-9*?-]{0,61}[a-zA-Z0-9*?])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$`),
+					"Alias must be a fully qualified domain name with optional wildcards",
+				),
+			},
+		},
+		"user_ids": schema.ListAttribute{
+			ElementType: types.StringType,
+			Optional:    true,
+			Computed:    true,
+
+			MarkdownDescription: "The list of user IDs allowed to access this resource.",
+			PlanModifiers: []planmodifier.List{
+				listplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"role_ids": schema.ListAttribute{
+			ElementType: types.Int64Type,
+			Optional:    true,
+			Computed:    true,
+
+			MarkdownDescription: "The list of role IDs allowed to access this resource.",
+			PlanModifiers: []planmodifier.List{
+				listplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"client_ids": schema.ListAttribute{
+			ElementType: types.Int64Type,
+			Optional:    true,
+			Computed:    true,
+
+			MarkdownDescription: "The list of client IDs allowed to access this resource.",
+			PlanModifiers: []planmodifier.List{
+				listplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"tcp_port_range_string": schema.StringAttribute{
+			Optional:            true,
+			Computed:            true,
+			Default:             stringdefault.StaticString(""),
+			MarkdownDescription: "The TCP port range allowed (e.g., '80,443' or '*'). Defaults to blocking traffic.",
+			Validators: []validator.String{
+				stringvalidator.RegexMatches(
+					regexp.MustCompile(`^(?:(?:[0-9-]+,?)+|\*)$`),
+					"Port range must be like 80,43,8000-8500",
+				),
+			},
+		},
+		"udp_port_range_string": schema.StringAttribute{
+			Optional:            true,
+			Computed:            true,
+			Default:             stringdefault.StaticString(""),
+			MarkdownDescription: "The UDP port range allowed (e.g., '53' or '*'). Defaults to blocking traffic.",
+			Validators: []validator.String{
+				stringvalidator.RegexMatches(
+					regexp.MustCompile(`^(?:(?:[0-9-]+,?)+|\*)$`),
+					"Port range must be like 80,43,8000-8500",
+				),
+			},
+		},
+		"disable_icmp": schema.BoolAttribute{
+			Optional:            true,
+			Computed:            true,
+			Default:             booldefault.StaticBool(false),
+			MarkdownDescription: "Whether to disable ICMP for this resource.",
+		},
+	},
+}
+var schemaV1 = schema.Schema{
+	Version:             1,
+	MarkdownDescription: "Manages a site resource (Host or CIDR mode).",
+	Attributes: map[string]schema.Attribute{
+		"id": schema.Int64Attribute{
+			Computed:            true,
+			MarkdownDescription: "The ID of the site resource.",
+			PlanModifiers: []planmodifier.Int64{
+				int64planmodifier.UseStateForUnknown(),
+			},
+		},
+		"nice_id": schema.StringAttribute{
+			Computed:            true,
+			MarkdownDescription: "The human-readable ID of the site resource.",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"org_id": schema.StringAttribute{
+			Required:            true,
+			MarkdownDescription: "The ID of the organization.",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+			},
+		},
+		"name": schema.StringAttribute{
+			Required:            true,
+			MarkdownDescription: "The name of the site resource.",
+		},
+		"mode": schema.StringAttribute{
+			Required:            true,
+			MarkdownDescription: "The mode of the resource (host or cidr).",
+			Validators: []validator.String{
+				stringvalidator.OneOf("host", "cidr"),
+			},
+		},
+		"site_ids": schema.ListAttribute{
+			ElementType:         types.Int64Type,
+			Required:            true,
+			MarkdownDescription: "The ID of the site.",
+			PlanModifiers: []planmodifier.List{
+				listplanmodifier.RequiresReplace(),
+			},
+		},
+		"destination": schema.StringAttribute{
+			Required:            true,
+			MarkdownDescription: "The destination address or CIDR.",
+		},
+		"enabled": schema.BoolAttribute{
+			Optional:            true,
+			Computed:            true,
+			Default:             booldefault.StaticBool(true),
+			MarkdownDescription: "Whether the resource is enabled.",
+		},
+		"alias": schema.StringAttribute{
+			Optional:            true,
+			MarkdownDescription: "The alias for the resource.",
+			Validators: []validator.String{
+				stringvalidator.RegexMatches(
+					regexp.MustCompile(`^(?:[a-zA-Z0-9*?](?:[a-zA-Z0-9*?-]{0,61}[a-zA-Z0-9*?])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$`),
+					"Alias must be a fully qualified domain name with optional wildcards",
+				),
+			},
+		},
+		"user_ids": schema.ListAttribute{
+			ElementType:         types.StringType,
+			Optional:            true,
+			Computed:            true,
+			MarkdownDescription: "The list of user IDs allowed to access this resource.",
+			PlanModifiers: []planmodifier.List{
+				listplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"role_ids": schema.ListAttribute{
+			ElementType:         types.Int64Type,
+			Optional:            true,
+			Computed:            true,
+			MarkdownDescription: "The list of role IDs allowed to access this resource.",
+			PlanModifiers: []planmodifier.List{
+				listplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"client_ids": schema.ListAttribute{
+			ElementType:         types.Int64Type,
+			Optional:            true,
+			Computed:            true,
+			MarkdownDescription: "The list of client IDs allowed to access this resource.",
+			PlanModifiers: []planmodifier.List{
+				listplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"tcp_port_range_string": schema.StringAttribute{
+			Optional:            true,
+			Computed:            true,
+			Default:             stringdefault.StaticString(""),
+			MarkdownDescription: "The TCP port range allowed (e.g., '80,443' or '*'). Defaults to blocking traffic.",
+			Validators: []validator.String{
+				stringvalidator.RegexMatches(
+					regexp.MustCompile(`^(?:(?:[0-9-]+,?)+|\*)$`),
+					"Port range must be like 80,43,8000-8500",
+				),
+			},
+		},
+		"udp_port_range_string": schema.StringAttribute{
+			Optional:            true,
+			Computed:            true,
+			Default:             stringdefault.StaticString(""),
+			MarkdownDescription: "The UDP port range allowed (e.g., '53' or '*'). Defaults to blocking traffic.",
+			Validators: []validator.String{
+				stringvalidator.RegexMatches(
+					regexp.MustCompile(`^(?:(?:[0-9-]+,?)+|\*)$`),
+					"Port range must be like 80,43,8000-8500",
+				),
+			},
+		},
+		"disable_icmp": schema.BoolAttribute{
+			Optional:            true,
+			Computed:            true,
+			Default:             booldefault.StaticBool(false),
+			MarkdownDescription: "Whether to disable ICMP for this resource.",
+		},
+	},
+}
 
 func NewSiteResourceResource() resource.Resource {
 	return &siteResourceResource{}
@@ -33,7 +282,7 @@ type siteResourceResource struct {
 	client *client.Client
 }
 
-type siteResourceResourceModel struct {
+type siteResourceResourceModelV0 struct {
 	ID                 types.Int64  `tfsdk:"id"`
 	NiceID             types.String `tfsdk:"nice_id"`
 	OrgID              types.String `tfsdk:"org_id"`
@@ -51,141 +300,30 @@ type siteResourceResourceModel struct {
 	DisableIcmp        types.Bool   `tfsdk:"disable_icmp"`
 }
 
+type siteResourceResourceModelV1 struct {
+	ID                 types.Int64  `tfsdk:"id"`
+	NiceID             types.String `tfsdk:"nice_id"`
+	OrgID              types.String `tfsdk:"org_id"`
+	Name               types.String `tfsdk:"name"`
+	Mode               types.String `tfsdk:"mode"`
+	SiteIDs            types.List   `tfsdk:"site_ids"`
+	Destination        types.String `tfsdk:"destination"`
+	Enabled            types.Bool   `tfsdk:"enabled"`
+	Alias              types.String `tfsdk:"alias"`
+	UserIDs            types.List   `tfsdk:"user_ids"`
+	RoleIDs            types.List   `tfsdk:"role_ids"`
+	ClientIDs          types.List   `tfsdk:"client_ids"`
+	TCPPortRangeString types.String `tfsdk:"tcp_port_range_string"`
+	UDPPortRangeString types.String `tfsdk:"udp_port_range_string"`
+	DisableIcmp        types.Bool   `tfsdk:"disable_icmp"`
+}
+
 func (r *siteResourceResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_site_resource"
 }
 
 func (r *siteResourceResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages a site resource (Host or CIDR mode).",
-		Attributes: map[string]schema.Attribute{
-			"id": schema.Int64Attribute{
-				Computed:            true,
-				MarkdownDescription: "The ID of the site resource.",
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.UseStateForUnknown(),
-				},
-			},
-			"nice_id": schema.StringAttribute{
-				Computed:            true,
-				MarkdownDescription: "The human-readable ID of the site resource.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"org_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The ID of the organization.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"name": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The name of the site resource.",
-			},
-			"mode": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The mode of the resource (host or cidr).",
-				Validators: []validator.String{
-					stringvalidator.OneOf("host", "cidr"),
-				},
-			},
-			"site_id": schema.Int64Attribute{
-				Required:            true,
-				MarkdownDescription: "The ID of the site.",
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
-				},
-			},
-			"destination": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The destination address or CIDR.",
-			},
-			"enabled": schema.BoolAttribute{
-				Optional:            true,
-				Computed:            true,
-				Default:             booldefault.StaticBool(true),
-				MarkdownDescription: "Whether the resource is enabled.",
-			},
-			"alias": schema.StringAttribute{
-				Optional:            true,
-				MarkdownDescription: "The alias for the resource.",
-				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^(?:[a-zA-Z0-9*?](?:[a-zA-Z0-9*?-]{0,61}[a-zA-Z0-9*?])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$`),
-						"Alias must be a fully qualified domain name with optional wildcards",
-					),
-				},
-			},
-			"user_ids": schema.ListAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
-				Computed:    true,
-				// Default: listdefault.StaticValue(
-				// 	types.ListValueMust(types.StringType, make([]attr.Value, 0)),
-				// ),
-				MarkdownDescription: "The list of user IDs allowed to access this resource.",
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"role_ids": schema.ListAttribute{
-				ElementType: types.Int64Type,
-				Optional:    true,
-				Computed:    true,
-				// Default: listdefault.StaticValue(
-				// 	types.ListValueMust(types.Int64Type, make([]attr.Value, 0)),
-				// ),
-				MarkdownDescription: "The list of role IDs allowed to access this resource.",
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"client_ids": schema.ListAttribute{
-				ElementType: types.Int64Type,
-				Optional:    true,
-				Computed:    true,
-				// Default: listdefault.StaticValue(
-				// 	types.ListValueMust(types.Int64Type, make([]attr.Value, 0)),
-				// ),
-				MarkdownDescription: "The list of client IDs allowed to access this resource.",
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"tcp_port_range_string": schema.StringAttribute{
-				Optional:            true,
-				Computed:            true,
-				Default:             stringdefault.StaticString(""),
-				MarkdownDescription: "The TCP port range allowed (e.g., '80,443' or '*'). Defaults to blocking traffic.",
-				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^(?:(?:[0-9-]+,?)+|\*)$`),
-						"Port range must be like 80,43,8000-8500",
-					),
-				},
-			},
-			"udp_port_range_string": schema.StringAttribute{
-				Optional:            true,
-				Computed:            true,
-				Default:             stringdefault.StaticString(""),
-				MarkdownDescription: "The UDP port range allowed (e.g., '53' or '*'). Defaults to blocking traffic.",
-				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^(?:(?:[0-9-]+,?)+|\*)$`),
-						"Port range must be like 80,43,8000-8500",
-					),
-				},
-			},
-			"disable_icmp": schema.BoolAttribute{
-				Optional:            true,
-				Computed:            true,
-				Default:             booldefault.StaticBool(false),
-				MarkdownDescription: "Whether to disable ICMP for this resource.",
-			},
-		},
-	}
+	resp.Schema = schemaV1
 }
 
 func (r *siteResourceResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -203,7 +341,7 @@ func (r *siteResourceResource) Configure(_ context.Context, req resource.Configu
 }
 
 func (r *siteResourceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data siteResourceResourceModel
+	var data siteResourceResourceModelV1
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -213,7 +351,7 @@ func (r *siteResourceResource) Create(ctx context.Context, req resource.CreateRe
 	res := &client.SiteResource{
 		Name:               data.Name.ValueStringPointer(),
 		Mode:               data.Mode.ValueStringPointer(),
-		SiteID:             data.SiteID.ValueInt64Pointer(),
+		SiteIDs:            make([]int64, 0),
 		Destination:        data.Destination.ValueStringPointer(),
 		Enabled:            data.Enabled.ValueBoolPointer(),
 		TCPPortRangeString: data.TCPPortRangeString.ValueStringPointer(),
@@ -224,6 +362,8 @@ func (r *siteResourceResource) Create(ctx context.Context, req resource.CreateRe
 		RoleIDs:            make([]int64, 0),
 		ClientIDs:          make([]int64, 0),
 	}
+
+	resp.Diagnostics.Append(data.SiteIDs.ElementsAs(ctx, &res.SiteIDs, false)...)
 
 	if !data.UserIDs.IsUnknown() {
 		resp.Diagnostics.Append(data.UserIDs.ElementsAs(ctx, &res.UserIDs, false)...)
@@ -266,7 +406,7 @@ func (r *siteResourceResource) Create(ctx context.Context, req resource.CreateRe
 }
 
 func (r *siteResourceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data siteResourceResourceModel
+	var data siteResourceResourceModelV1
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -280,7 +420,6 @@ func (r *siteResourceResource) Read(ctx context.Context, req resource.ReadReques
 	}
 
 	data.Name = types.StringPointerValue(res.Name)
-	data.SiteID = types.Int64PointerValue(res.SiteID)
 	data.Mode = types.StringPointerValue(res.Mode)
 	data.Destination = types.StringPointerValue(res.Destination)
 	data.Enabled = types.BoolPointerValue(res.Enabled)
@@ -288,6 +427,11 @@ func (r *siteResourceResource) Read(ctx context.Context, req resource.ReadReques
 	data.TCPPortRangeString = types.StringPointerValue(res.TCPPortRangeString)
 	data.UDPPortRangeString = types.StringPointerValue(res.UDPPortRangeString)
 	data.DisableIcmp = types.BoolPointerValue(res.DisableIcmp)
+
+	siteIds, diags := types.ListValueFrom(ctx, types.Int64Type, res.SiteIDs)
+	resp.Diagnostics.Append(diags...)
+
+	data.SiteIDs = siteIds
 
 	roleIDs, err := r.client.GetSiteResourceRoles(data.ID.ValueInt64())
 
@@ -322,7 +466,7 @@ func (r *siteResourceResource) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *siteResourceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, state siteResourceResourceModel
+	var data, state siteResourceResourceModelV1
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -333,7 +477,6 @@ func (r *siteResourceResource) Update(ctx context.Context, req resource.UpdateRe
 	res := &client.SiteResource{
 		Name:               data.Name.ValueStringPointer(),
 		Mode:               data.Mode.ValueStringPointer(),
-		SiteID:             data.SiteID.ValueInt64Pointer(),
 		Destination:        data.Destination.ValueStringPointer(),
 		Enabled:            data.Enabled.ValueBoolPointer(),
 		TCPPortRangeString: data.TCPPortRangeString.ValueStringPointer(),
@@ -346,6 +489,7 @@ func (r *siteResourceResource) Update(ctx context.Context, req resource.UpdateRe
 		res.Alias = &s
 	}
 
+	resp.Diagnostics.Append(data.SiteIDs.ElementsAs(ctx, &res.SiteIDs, false)...)
 	resp.Diagnostics.Append(data.UserIDs.ElementsAs(ctx, &res.UserIDs, false)...)
 	resp.Diagnostics.Append(data.RoleIDs.ElementsAs(ctx, &res.RoleIDs, false)...)
 	resp.Diagnostics.Append(data.ClientIDs.ElementsAs(ctx, &res.ClientIDs, false)...)
@@ -366,7 +510,7 @@ func (r *siteResourceResource) Update(ctx context.Context, req resource.UpdateRe
 }
 
 func (r *siteResourceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data siteResourceResourceModel
+	var data siteResourceResourceModelV1
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -403,4 +547,43 @@ func (r *siteResourceResource) ImportState(ctx context.Context, req resource.Imp
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("org_id"), idParts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), resID)...)
+}
+
+func (r *siteResourceResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	return map[int64]resource.StateUpgrader{
+		0: {
+			PriorSchema: &schemaV0,
+			StateUpgrader: func(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+				var priorStateData siteResourceResourceModelV0
+
+				resp.Diagnostics.Append(req.State.Get(ctx, &priorStateData)...)
+
+				if resp.Diagnostics.HasError() {
+					return
+				}
+
+				upgradedStateData := siteResourceResourceModelV1{
+					SiteIDs: types.ListValueMust(types.Int64Type, []attr.Value{
+						priorStateData.SiteID,
+					}),
+					ID:                 priorStateData.ID,
+					NiceID:             priorStateData.NiceID,
+					OrgID:              priorStateData.OrgID,
+					Name:               priorStateData.Name,
+					Mode:               priorStateData.Mode,
+					Destination:        priorStateData.Destination,
+					Enabled:            priorStateData.Enabled,
+					Alias:              priorStateData.Alias,
+					UserIDs:            priorStateData.UserIDs,
+					RoleIDs:            priorStateData.RoleIDs,
+					ClientIDs:          priorStateData.ClientIDs,
+					TCPPortRangeString: priorStateData.TCPPortRangeString,
+					UDPPortRangeString: priorStateData.UDPPortRangeString,
+					DisableIcmp:        priorStateData.DisableIcmp,
+				}
+
+				resp.Diagnostics.Append(resp.State.Set(ctx, upgradedStateData)...)
+			},
+		},
+	}
 }

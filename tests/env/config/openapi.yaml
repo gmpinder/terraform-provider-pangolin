@@ -18,7 +18,6 @@ paths:
         Get a site by orgId and niceId. NiceId is a readable ID for the site and
         unique on a per org basis.
       tags:
-        - Organization
         - Site
       security:
         - Bearer Auth: []
@@ -33,7 +32,14 @@ paths:
           required: true
           name: niceId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /site/{siteId}:
     get:
       description: Get a site by siteId.
@@ -47,7 +53,14 @@ paths:
           required: true
           name: siteId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     delete:
       description: Delete a site and all its associated data.
       tags:
@@ -60,7 +73,14 @@ paths:
           required: true
           name: siteId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     post:
       description: Update a site.
       tags:
@@ -89,14 +109,25 @@ paths:
                   maxLength: 255
                 dockerSocketEnabled:
                   type: boolean
+                status:
+                  type: string
+                  enum:
+                    - pending
+                    - approved
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/site:
     put:
       description: Create a new site.
       tags:
         - Site
-        - Organization
       security:
         - Bearer Auth: []
       parameters:
@@ -119,6 +150,10 @@ paths:
                   type: integer
                   minimum: 0
                   exclusiveMinimum: true
+                niceId:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
                 pubKey:
                   type: string
                 subnet:
@@ -139,13 +174,22 @@ paths:
                 - name
                 - type
               additionalProperties: false
-      responses: {}
+            example:
+              name: My Site
+              type: newt
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/site-resource:
     put:
       description: Create a new site resource.
       tags:
-        - Client
-        - Organization
+        - Private Resource
       security:
         - Bearer Auth: []
       parameters:
@@ -164,14 +208,29 @@ paths:
                   type: string
                   minLength: 1
                   maxLength: 255
+                niceId:
+                  type: string
                 mode:
                   type: string
                   enum:
                     - host
                     - cidr
-                    - port
-                siteId:
+                    - http
+                ssl:
+                  type: boolean
+                scheme:
+                  type: string
+                  enum:
+                    - http
+                    - https
+                siteIds:
+                  type: array
+                  items:
+                    type: integer
+                destinationPort:
                   type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
                 destination:
                   type: string
                   minLength: 1
@@ -209,22 +268,32 @@ paths:
                   enum:
                     - site
                     - remote
+                domainId:
+                  type: string
+                subdomain:
+                  type: string
               required:
                 - name
                 - mode
-                - siteId
+                - siteIds
                 - destination
                 - userIds
                 - roleIds
                 - clientIds
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /site-resource/{siteResourceId}:
     delete:
       description: Delete a site resource.
       tags:
-        - Client
-        - Organization
+        - Private Resource
       security:
         - Bearer Auth: []
       parameters:
@@ -233,12 +302,18 @@ paths:
           required: true
           name: siteResourceId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     get:
       description: Get a specific site resource by siteResourceId.
       tags:
-        - Client
-        - Organization
+        - Private Resource
       security:
         - Bearer Auth: []
       parameters:
@@ -257,12 +332,18 @@ paths:
           required: true
           name: orgId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     post:
       description: Update a site resource.
       tags:
-        - Client
-        - Organization
+        - Private Resource
       security:
         - Bearer Auth: []
       parameters:
@@ -281,13 +362,35 @@ paths:
                   type: string
                   minLength: 1
                   maxLength: 255
-                siteId:
-                  type: integer
+                siteIds:
+                  type: array
+                  items:
+                    type: integer
+                niceId:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                  pattern: ^[a-zA-Z0-9-]+$
                 mode:
                   type: string
                   enum:
                     - host
                     - cidr
+                    - http
+                ssl:
+                  type: boolean
+                scheme:
+                  type: string
+                  nullable: true
+                  enum:
+                    - http
+                    - https
+                    - null
+                destinationPort:
+                  type: integer
+                  nullable: true
+                  minimum: 0
+                  exclusiveMinimum: true
                 destination:
                   type: string
                   minLength: 1
@@ -326,19 +429,29 @@ paths:
                   enum:
                     - site
                     - remote
+                domainId:
+                  type: string
+                subdomain:
+                  type: string
               required:
-                - siteId
+                - siteIds
                 - userIds
                 - roleIds
                 - clientIds
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/site/{siteId}/resource/nice/{niceId}:
     get:
       description: Get a specific site resource by niceId.
       tags:
-        - Client
-        - Organization
+        - Private Resource
       security:
         - Bearer Auth: []
       parameters:
@@ -348,22 +461,23 @@ paths:
           name: niceId
           in: path
         - schema:
-            type: number
-          required: true
-          name: siteId
-          in: path
-        - schema:
             type: string
           required: true
           name: orgId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/site/{siteId}/resources:
     get:
       description: List site resources for a site.
       tags:
-        - Client
-        - Organization
+        - Private Resource
       security:
         - Bearer Auth: []
       parameters:
@@ -409,13 +523,19 @@ paths:
           description: Sort order
           name: order
           in: query
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/site-resources:
     get:
       description: List all site resources for an organization.
       tags:
-        - Client
-        - Organization
+        - Private Resource
       security:
         - Bearer Auth: []
       parameters:
@@ -450,6 +570,7 @@ paths:
             enum:
               - host
               - cidr
+              - http
             description: Filter site resources by mode
           required: false
           description: Filter site resources by mode
@@ -475,12 +596,30 @@ paths:
           description: Sort order
           name: order
           in: query
-      responses: {}
+        - schema:
+            type: integer
+            description: >-
+              When set, only site resources associated with this site (via
+              network) are returned
+          required: false
+          description: >-
+            When set, only site resources associated with this site (via
+            network) are returned
+          name: siteId
+          in: query
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /site-resource/{siteResourceId}/roles:
     get:
       description: List all roles for a site resource.
       tags:
-        - Resource
+        - Private Resource
         - Role
       security:
         - Bearer Auth: []
@@ -490,11 +629,18 @@ paths:
           required: true
           name: siteResourceId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     post:
       description: Set roles for a site resource. This will replace all existing roles.
       tags:
-        - Resource
+        - Private Resource
         - Role
       security:
         - Bearer Auth: []
@@ -519,12 +665,19 @@ paths:
               required:
                 - roleIds
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /site-resource/{siteResourceId}/users:
     get:
       description: List all users for a site resource.
       tags:
-        - Resource
+        - Private Resource
         - User
       security:
         - Bearer Auth: []
@@ -534,11 +687,18 @@ paths:
           required: true
           name: siteResourceId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     post:
       description: Set users for a site resource. This will replace all existing users.
       tags:
-        - Resource
+        - Private Resource
         - User
       security:
         - Bearer Auth: []
@@ -561,12 +721,19 @@ paths:
               required:
                 - userIds
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /site-resource/{siteResourceId}/clients:
     get:
       description: List all clients for a site resource.
       tags:
-        - Resource
+        - Private Resource
         - Client
       security:
         - Bearer Auth: []
@@ -576,13 +743,20 @@ paths:
           required: true
           name: siteResourceId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     post:
       description: >-
         Set clients for a site resource. This will replace all existing clients.
         Clients with a userId cannot be added.
       tags:
-        - Resource
+        - Private Resource
         - Client
       security:
         - Bearer Auth: []
@@ -607,12 +781,19 @@ paths:
               required:
                 - clientIds
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /site-resource/{siteResourceId}/roles/add:
     post:
       description: Add a single role to a site resource.
       tags:
-        - Resource
+        - Private Resource
         - Role
       security:
         - Bearer Auth: []
@@ -635,12 +816,19 @@ paths:
               required:
                 - roleId
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /site-resource/{siteResourceId}/roles/remove:
     post:
       description: Remove a single role from a site resource.
       tags:
-        - Resource
+        - Private Resource
         - Role
       security:
         - Bearer Auth: []
@@ -663,12 +851,19 @@ paths:
               required:
                 - roleId
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /site-resource/{siteResourceId}/users/add:
     post:
       description: Add a single user to a site resource.
       tags:
-        - Resource
+        - Private Resource
         - User
       security:
         - Bearer Auth: []
@@ -689,12 +884,19 @@ paths:
               required:
                 - userId
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /site-resource/{siteResourceId}/users/remove:
     post:
       description: Remove a single user from a site resource.
       tags:
-        - Resource
+        - Private Resource
         - User
       security:
         - Bearer Auth: []
@@ -715,14 +917,21 @@ paths:
               required:
                 - userId
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /site-resource/{siteResourceId}/clients/add:
     post:
       description: >-
         Add a single client to a site resource. Clients with a userId cannot be
         added.
       tags:
-        - Resource
+        - Private Resource
         - Client
       security:
         - Bearer Auth: []
@@ -745,14 +954,58 @@ paths:
               required:
                 - clientId
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /client/{clientId}/site-resources:
+    post:
+      description: Add a machine client to multiple site resources at once.
+      tags:
+        - Client
+      security:
+        - Bearer Auth: []
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: clientId
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                siteResourceIds:
+                  type: array
+                  items:
+                    type: integer
+                    minimum: 0
+                    exclusiveMinimum: true
+                  minItems: 1
+              required:
+                - siteResourceIds
+              additionalProperties: false
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /site-resource/{siteResourceId}/clients/remove:
     post:
       description: >-
         Remove a single client from a site resource. Clients with a userId
         cannot be removed.
       tags:
-        - Resource
+        - Private Resource
         - Client
       security:
         - Bearer Auth: []
@@ -775,12 +1028,19 @@ paths:
               required:
                 - clientId
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /target/{targetId}:
     get:
       description: Get a target.
       tags:
-        - Target
+        - Resource Target
       security:
         - Bearer Auth: []
       parameters:
@@ -789,11 +1049,18 @@ paths:
           required: true
           name: targetId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     delete:
       description: Delete a target.
       tags:
-        - Target
+        - Resource Target
       security:
         - Bearer Auth: []
       parameters:
@@ -802,11 +1069,18 @@ paths:
           required: true
           name: targetId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     post:
       description: Update a target.
       tags:
-        - Target
+        - Resource Target
       security:
         - Bearer Auth: []
       parameters:
@@ -862,12 +1136,12 @@ paths:
                 hcInterval:
                   type: integer
                   nullable: true
-                  minimum: 5
+                  minimum: 1
                   exclusiveMinimum: true
                 hcUnhealthyInterval:
                   type: integer
                   nullable: true
-                  minimum: 5
+                  minimum: 1
                   exclusiveMinimum: true
                 hcTimeout:
                   type: integer
@@ -901,6 +1175,16 @@ paths:
                 hcTlsServerName:
                   type: string
                   nullable: true
+                hcHealthyThreshold:
+                  type: integer
+                  nullable: true
+                  minimum: 1
+                  exclusiveMinimum: true
+                hcUnhealthyThreshold:
+                  type: integer
+                  nullable: true
+                  minimum: 1
+                  exclusiveMinimum: true
                 path:
                   type: string
                   nullable: true
@@ -932,13 +1216,20 @@ paths:
                 - siteId
                 - ip
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /resource/{resourceId}/target:
     put:
       description: Create a target for a resource.
       tags:
-        - Resource
-        - Target
+        - Public Resource
+        - Resource Target
       security:
         - Bearer Auth: []
       parameters:
@@ -992,12 +1283,12 @@ paths:
                 hcInterval:
                   type: integer
                   nullable: true
-                  minimum: 5
+                  minimum: 1
                   exclusiveMinimum: true
                 hcUnhealthyInterval:
                   type: integer
                   nullable: true
-                  minimum: 5
+                  minimum: 1
                   exclusiveMinimum: true
                 hcTimeout:
                   type: integer
@@ -1031,6 +1322,16 @@ paths:
                 hcTlsServerName:
                   type: string
                   nullable: true
+                hcHealthyThreshold:
+                  type: integer
+                  nullable: true
+                  minimum: 1
+                  exclusiveMinimum: true
+                hcUnhealthyThreshold:
+                  type: integer
+                  nullable: true
+                  minimum: 1
+                  exclusiveMinimum: true
                 path:
                   type: string
                   nullable: true
@@ -1064,13 +1365,20 @@ paths:
                 - ip
                 - port
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /resource/{resourceId}/targets:
     get:
       description: List targets for a resource.
       tags:
-        - Resource
-        - Target
+        - Public Resource
+        - Resource Target
       security:
         - Bearer Auth: []
       parameters:
@@ -1091,7 +1399,14 @@ paths:
           required: false
           name: offset
           in: query
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/sites:
     get:
       description: List all sites in an organization
@@ -1156,14 +1471,30 @@ paths:
           description: Filter by online status
           name: online
           in: query
-      responses: {}
+        - schema:
+            type: string
+            enum:
+              - pending
+              - approved
+            description: Filter by site status
+          required: false
+          description: Filter by site status
+          name: status
+          in: query
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/pick-site-defaults:
     get:
       description: >-
         Return pre-requisite data for creating a site, such as the exit node,
         subnet, Newt credentials, etc.
       tags:
-        - Organization
         - Site
       security:
         - Bearer Auth: []
@@ -1173,7 +1504,14 @@ paths:
           required: true
           name: orgId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}:
     get:
       description: Get an organization
@@ -1187,7 +1525,14 @@ paths:
           required: true
           name: orgId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     delete:
       description: Delete an organization
       tags:
@@ -1200,7 +1545,14 @@ paths:
           required: true
           name: orgId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     post:
       description: Update an organization
       tags:
@@ -1240,13 +1592,23 @@ paths:
                 settingsLogRetentionDaysAction:
                   type: number
                   minimum: -1
+                settingsLogRetentionDaysConnection:
+                  type: number
+                  minimum: -1
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /resource/{resourceId}/roles:
     post:
       description: Set roles for a resource. This will replace all existing roles.
       tags:
-        - Resource
+        - Public Resource
         - Role
       security:
         - Bearer Auth: []
@@ -1271,11 +1633,18 @@ paths:
               required:
                 - roleIds
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     get:
       description: List all roles for a resource.
       tags:
-        - Resource
+        - Public Resource
         - Role
       security:
         - Bearer Auth: []
@@ -1285,12 +1654,18 @@ paths:
           required: true
           name: resourceId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/role:
     put:
       description: Create a role.
       tags:
-        - Organization
         - Role
       security:
         - Bearer Auth: []
@@ -1335,7 +1710,14 @@ paths:
               required:
                 - name
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /role/{roleId}:
     delete:
       description: Delete a role.
@@ -1360,7 +1742,14 @@ paths:
               required:
                 - roleId
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     get:
       description: Get a role.
       tags:
@@ -1373,7 +1762,14 @@ paths:
           required: true
           name: roleId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     post:
       description: Update a role.
       tags:
@@ -1419,12 +1815,18 @@ paths:
                   items:
                     type: string
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/roles:
     get:
       description: List roles.
       tags:
-        - Organization
         - Role
       security:
         - Bearer Auth: []
@@ -1435,18 +1837,54 @@ paths:
           name: orgId
           in: path
         - schema:
-            type: string
-            default: '1000'
+            type: integer
+            default: 20
+            description: Number of items per page
           required: false
-          name: limit
+          description: Number of items per page
+          name: pageSize
+          in: query
+        - schema:
+            type: integer
+            default: 1
+            description: Page number to retrieve
+          required: false
+          description: Page number to retrieve
+          name: page
           in: query
         - schema:
             type: string
-            default: '0'
           required: false
-          name: offset
+          name: query
           in: query
-      responses: {}
+        - schema:
+            type: string
+            enum:
+              - name
+            description: Field to sort by
+          required: false
+          description: Field to sort by
+          name: sort_by
+          in: query
+        - schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+            description: Sort order
+          required: false
+          description: Sort order
+          name: order
+          in: query
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org:
     put:
       description: Create a new organization
@@ -1480,7 +1918,14 @@ paths:
                 - subnet
                 - utilitySubnet
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /orgs:
     get:
       description: List all organizations in the system.
@@ -1501,7 +1946,14 @@ paths:
           required: false
           name: offset
           in: query
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/user/{userId}/check:
     get:
       description: Check a user's access in an organization.
@@ -1521,15 +1973,43 @@ paths:
           required: true
           name: orgId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /org/{orgId}/reset-bandwidth:
+    post:
+      description: Reset all sites in selected organization bandwidth counters.
+      tags:
+        - Organization
+        - Site
+      security:
+        - Bearer Auth: []
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: orgId
+          in: path
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/resource/{niceId}:
     get:
       description: >-
         Get a resource by orgId and niceId. NiceId is a readable ID for the
         resource and unique on a per org basis.
       tags:
-        - Organization
-        - Resource
+        - Public Resource
       security:
         - Bearer Auth: []
       parameters:
@@ -1543,12 +2023,19 @@ paths:
           required: true
           name: niceId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /resource/{resourceId}:
     get:
       description: Get a resource by resourceId.
       tags:
-        - Resource
+        - Public Resource
       security:
         - Bearer Auth: []
       parameters:
@@ -1557,11 +2044,18 @@ paths:
           required: true
           name: resourceId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     delete:
       description: Delete a resource.
       tags:
-        - Resource
+        - Public Resource
       security:
         - Bearer Auth: []
       parameters:
@@ -1570,11 +2064,18 @@ paths:
           required: true
           name: resourceId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     post:
       description: Update a resource.
       tags:
-        - Resource
+        - Public Resource
       security:
         - Bearer Auth: []
       parameters:
@@ -1602,9 +2103,6 @@ paths:
                     subdomain:
                       type: string
                       nullable: true
-                      minLength: 1
-                      pattern: >-
-                        ^(?!:\/\/)([a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)*[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?$
                     ssl:
                       type: boolean
                     sso:
@@ -1693,13 +2191,19 @@ paths:
                       type: integer
                       minimum: 1
                   additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/resource:
     put:
       description: Create a resource.
       tags:
-        - Organization
-        - Resource
+        - Public Resource
       security:
         - Bearer Auth: []
       parameters:
@@ -1765,13 +2269,19 @@ paths:
                     - protocol
                     - proxyPort
                   additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/resources:
     get:
       description: List resources for an organization.
       tags:
-        - Organization
-        - Resource
+        - Public Resource
       security:
         - Bearer Auth: []
       parameters:
@@ -1854,7 +2364,6 @@ paths:
         - schema:
             type: string
             enum:
-              - no_targets
               - healthy
               - degraded
               - offline
@@ -1864,23 +2373,40 @@ paths:
               `healthy` means all targets are healthy. `degraded` means at least
               one target is unhealthy, but not all are unhealthy. `offline`
               means all targets are unhealthy. `unknown` means all targets have
-              unknown health status. `no_targets` means the resource has no
-              targets.
+              unknown health status.
           required: false
           description: >-
             Filter resources based on health status of their targets. `healthy`
             means all targets are healthy. `degraded` means at least one target
             is unhealthy, but not all are unhealthy. `offline` means all targets
             are unhealthy. `unknown` means all targets have unknown health
-            status. `no_targets` means the resource has no targets.
+            status.
           name: healthStatus
           in: query
-      responses: {}
+        - schema:
+            type: integer
+            description: >-
+              When set, only resources that have at least one target on this
+              site are returned
+          required: false
+          description: >-
+            When set, only resources that have at least one target on this site
+            are returned
+          name: siteId
+          in: query
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /resource/{resourceId}/users:
     post:
       description: Set users for a resource. This will replace all existing users.
       tags:
-        - Resource
+        - Public Resource
         - User
       security:
         - Bearer Auth: []
@@ -1903,11 +2429,18 @@ paths:
               required:
                 - userIds
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     get:
       description: List all users for a resource.
       tags:
-        - Resource
+        - Public Resource
         - User
       security:
         - Bearer Auth: []
@@ -1917,14 +2450,21 @@ paths:
           required: true
           name: resourceId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /resource/{resourceId}/password:
     post:
       description: >-
         Set the password for a resource. Setting the password to null will
         remove it.
       tags:
-        - Resource
+        - Public Resource
       security:
         - Bearer Auth: []
       parameters:
@@ -1947,14 +2487,21 @@ paths:
               required:
                 - password
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /resource/{resourceId}/pincode:
     post:
       description: >-
         Set the PIN code for a resource. Setting the PIN code to null will
         remove it.
       tags:
-        - Resource
+        - Public Resource
       security:
         - Bearer Auth: []
       parameters:
@@ -1977,14 +2524,21 @@ paths:
               required:
                 - pincode
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /resource/{resourceId}/whitelist:
     post:
       description: >-
         Set email whitelist for a resource. This will replace all existing
         emails.
       tags:
-        - Resource
+        - Public Resource
       security:
         - Bearer Auth: []
       parameters:
@@ -2011,11 +2565,18 @@ paths:
               required:
                 - emails
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     get:
       description: Get the whitelist of emails for a specific resource.
       tags:
-        - Resource
+        - Public Resource
       security:
         - Bearer Auth: []
       parameters:
@@ -2024,12 +2585,19 @@ paths:
           required: true
           name: resourceId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /resource/{resourceId}/rule:
     put:
       description: Create a resource rule.
       tags:
-        - Resource
+        - Public Resource
         - Rule
       security:
         - Bearer Auth: []
@@ -2059,6 +2627,7 @@ paths:
                     - PATH
                     - COUNTRY
                     - ASN
+                    - REGION
                 value:
                   type: string
                   minLength: 1
@@ -2072,12 +2641,19 @@ paths:
                 - value
                 - priority
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /resource/{resourceId}/rule/{ruleId}:
     delete:
       description: Delete a resource rule.
       tags:
-        - Resource
+        - Public Resource
         - Rule
       security:
         - Bearer Auth: []
@@ -2092,11 +2668,18 @@ paths:
           required: true
           name: resourceId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     post:
       description: Update a resource rule.
       tags:
-        - Resource
+        - Public Resource
         - Rule
       security:
         - Bearer Auth: []
@@ -2131,6 +2714,7 @@ paths:
                     - PATH
                     - COUNTRY
                     - ASN
+                    - REGION
                 value:
                   type: string
                   minLength: 1
@@ -2141,12 +2725,19 @@ paths:
               required:
                 - priority
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /resource/{resourceId}/rules:
     get:
       description: List rules for a resource.
       tags:
-        - Resource
+        - Public Resource
         - Rule
       security:
         - Bearer Auth: []
@@ -2168,14 +2759,21 @@ paths:
           required: false
           name: offset
           in: query
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /resource/{resourceId}/header-auth:
     post:
       description: >-
         Set or update the header authentication for a resource. If user and
         password is not provided, it will remove the header authentication.
       tags:
-        - Resource
+        - Public Resource
       security:
         - Bearer Auth: []
       parameters:
@@ -2208,12 +2806,19 @@ paths:
                 - password
                 - extendedCompatibility
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /resource/{resourceId}/whitelist/add:
     post:
       description: Add a single email to the resource whitelist.
       tags:
-        - Resource
+        - Public Resource
       security:
         - Bearer Auth: []
       parameters:
@@ -2237,12 +2842,19 @@ paths:
               required:
                 - email
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /resource/{resourceId}/whitelist/remove:
     post:
       description: Remove a single email from the resource whitelist.
       tags:
-        - Resource
+        - Public Resource
       security:
         - Bearer Auth: []
       parameters:
@@ -2266,12 +2878,19 @@ paths:
               required:
                 - email
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /resource/{resourceId}/roles/add:
     post:
       description: Add a single role to a resource.
       tags:
-        - Resource
+        - Public Resource
         - Role
       security:
         - Bearer Auth: []
@@ -2294,12 +2913,19 @@ paths:
               required:
                 - roleId
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /resource/{resourceId}/roles/remove:
     post:
       description: Remove a single role from a resource.
       tags:
-        - Resource
+        - Public Resource
         - Role
       security:
         - Bearer Auth: []
@@ -2322,12 +2948,19 @@ paths:
               required:
                 - roleId
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /resource/{resourceId}/users/add:
     post:
       description: Add a single user to a resource.
       tags:
-        - Resource
+        - Public Resource
         - User
       security:
         - Bearer Auth: []
@@ -2348,12 +2981,19 @@ paths:
               required:
                 - userId
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /resource/{resourceId}/users/remove:
     post:
       description: Remove a single user from a resource.
       tags:
-        - Resource
+        - Public Resource
         - User
       security:
         - Bearer Auth: []
@@ -2374,13 +3014,19 @@ paths:
               required:
                 - userId
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/resources-names:
     get:
       description: List all resource names for an organization.
       tags:
-        - Organization
-        - Resource
+        - Public Resource
       security:
         - Bearer Auth: []
       parameters:
@@ -2389,12 +3035,19 @@ paths:
           required: true
           name: orgId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/domains:
     get:
       description: List all domains for a organization.
       tags:
-        - Organization
+        - Domain
       security:
         - Bearer Auth: []
       parameters:
@@ -2415,7 +3068,14 @@ paths:
           required: false
           name: offset
           in: query
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/domain/{domainId}:
     get:
       description: Get a domain by domainId.
@@ -2434,7 +3094,14 @@ paths:
           required: true
           name: orgId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     patch:
       description: Update a domain by domainId.
       tags:
@@ -2452,7 +3119,14 @@ paths:
           required: true
           name: orgId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/domain/{domainId}/dns-records:
     get:
       description: Get all DNS records for a domain by domainId.
@@ -2471,12 +3145,18 @@ paths:
           required: true
           name: orgId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/user/{userId}:
     delete:
       description: Remove a user from an organization.
       tags:
-        - Organization
         - User
       security:
         - Bearer Auth: []
@@ -2491,11 +3171,17 @@ paths:
           required: true
           name: orgId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     get:
       description: Get a user in an organization.
       tags:
-        - Organization
         - User
       security:
         - Bearer Auth: []
@@ -2510,12 +3196,18 @@ paths:
           required: true
           name: orgId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     post:
       description: Update a user in an org.
       tags:
         - Organization
-        - User
       security:
         - Bearer Auth: []
       parameters:
@@ -2538,12 +3230,18 @@ paths:
                 autoProvisioned:
                   type: boolean
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/users:
     get:
       description: List users in an organization.
       tags:
-        - Organization
         - User
       security:
         - Bearer Auth: []
@@ -2554,21 +3252,90 @@ paths:
           name: orgId
           in: path
         - schema:
-            type: string
-            default: '1000'
+            type: integer
+            default: 20
+            description: Number of items per page
           required: false
-          name: limit
+          description: Number of items per page
+          name: pageSize
+          in: query
+        - schema:
+            type: integer
+            default: 1
+            description: Page number to retrieve
+          required: false
+          description: Page number to retrieve
+          name: page
           in: query
         - schema:
             type: string
-            default: '0'
           required: false
-          name: offset
+          name: query
           in: query
-      responses: {}
+        - schema:
+            type: string
+            enum:
+              - username
+            description: Field to sort by
+          required: false
+          description: Field to sort by
+          name: sort_by
+          in: query
+        - schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+            description: Sort order
+          required: false
+          description: Sort order
+          name: order
+          in: query
+        - schema:
+            anyOf:
+              - type: string
+                enum:
+                  - internal
+              - type: integer
+                minimum: 0
+                exclusiveMinimum: true
+              - nullable: true
+            description: Filter by identity provider id, or "internal" for internal users
+          required: false
+          description: Filter by identity provider id, or "internal" for internal users
+          name: idp_id
+          in: query
+        - schema:
+            type: array
+            nullable: true
+            items:
+              type: integer
+              minimum: 0
+              exclusiveMinimum: true
+            maxItems: 50
+            description: >-
+              Filter users who have any of these role ids in the organization
+              (repeat query param)
+          required: false
+          description: >-
+            Filter users who have any of these role ids in the organization
+            (repeat query param)
+          name: role_id
+          in: query
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /role/{roleId}/add/{userId}:
     post:
-      description: Add a role to a user.
+      description: >-
+        Legacy: set exactly one role for the user (replaces any other roles the
+        user has in the org).
       tags:
         - Role
         - User
@@ -2578,19 +3345,26 @@ paths:
         - schema:
             type: string
           required: true
-          name: userId
+          name: roleId
           in: path
         - schema:
             type: string
           required: true
-          name: roleId
+          name: userId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/create-invite:
     post:
       description: Invite a user to join an organization.
       tags:
-        - Organization
+        - User Invitation
       security:
         - Bearer Auth: []
       parameters:
@@ -2608,8 +3382,17 @@ paths:
                 email:
                   type: string
                   format: email
+                roleIds:
+                  type: array
+                  items:
+                    type: integer
+                    minimum: 0
+                    exclusiveMinimum: true
+                  minItems: 1
                 roleId:
-                  type: number
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
                 validHours:
                   type: number
                   minimum: 0
@@ -2621,10 +3404,16 @@ paths:
                   type: boolean
               required:
                 - email
-                - roleId
                 - validHours
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/user-by-username:
     get:
       description: >-
@@ -2633,7 +3422,6 @@ paths:
         For external (OIDC) users, pass idpId to search by username within that
         identity provider.
       tags:
-        - Organization
         - User
       security:
         - Bearer Auth: []
@@ -2654,7 +3442,98 @@ paths:
           required: false
           name: idpId
           in: query
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /users:
+    get:
+      description: List non–server-admin users (server admin).
+      tags:
+        - User
+      security:
+        - Bearer Auth: []
+      parameters:
+        - schema:
+            type: integer
+            default: 20
+            description: Number of items per page
+          required: false
+          description: Number of items per page
+          name: pageSize
+          in: query
+        - schema:
+            type: integer
+            default: 1
+            description: Page number to retrieve
+          required: false
+          description: Page number to retrieve
+          name: page
+          in: query
+        - schema:
+            type: string
+          required: false
+          name: query
+          in: query
+        - schema:
+            type: string
+            enum:
+              - username
+              - email
+              - name
+            description: Field to sort by
+          required: false
+          description: Field to sort by
+          name: sort_by
+          in: query
+        - schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+            description: Sort order
+          required: false
+          description: Sort order
+          name: order
+          in: query
+        - schema:
+            anyOf:
+              - type: string
+                enum:
+                  - internal
+              - type: integer
+                minimum: 0
+                exclusiveMinimum: true
+              - nullable: true
+            description: Filter by identity provider id, or "internal" for internal users
+          required: false
+          description: Filter by identity provider id, or "internal" for internal users
+          name: idp_id
+          in: query
+        - schema:
+            type: boolean
+            description: >-
+              Filter by 2FA state matching: enabled if twoFactorEnabled or
+              twoFactorSetupRequested
+          required: false
+          description: >-
+            Filter by 2FA state matching: enabled if twoFactorEnabled or
+            twoFactorSetupRequested
+          name: two_factor
+          in: query
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /user/{userId}:
     get:
       description: Get a user by ID.
@@ -2669,13 +3548,19 @@ paths:
           required: true
           name: userId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/invitations:
     get:
       description: List invitations in an organization.
       tags:
-        - Organization
-        - Invitation
+        - User Invitation
       security:
         - Bearer Auth: []
       parameters:
@@ -2696,12 +3581,19 @@ paths:
           required: false
           name: offset
           in: query
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/invitations/{inviteId}:
     delete:
       description: Remove an open invitation from an organization
       tags:
-        - Organization
+        - User Invitation
       security:
         - Bearer Auth: []
       parameters:
@@ -2715,13 +3607,19 @@ paths:
           required: true
           name: inviteId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/user:
     put:
       description: Create an organization user.
       tags:
         - User
-        - Organization
       security:
         - Bearer Auth: []
       parameters:
@@ -2752,13 +3650,28 @@ paths:
                     - oidc
                 idpId:
                   type: number
+                roleIds:
+                  type: array
+                  items:
+                    type: integer
+                    minimum: 0
+                    exclusiveMinimum: true
+                  minItems: 1
                 roleId:
-                  type: number
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
               required:
                 - username
-                - roleId
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /user/{userId}/2fa:
     post:
       description: Update a user's 2FA status.
@@ -2783,13 +3696,19 @@ paths:
               required:
                 - twoFactorSetupRequested
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/pick-client-defaults:
     get:
       description: Return pre-requisite data for creating a client.
       tags:
         - Client
-        - Site
       security:
         - Bearer Auth: []
       parameters:
@@ -2798,13 +3717,19 @@ paths:
           required: true
           name: orgId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/client:
     put:
       description: Create a new client for an organization.
       tags:
         - Client
-        - Organization
       security:
         - Bearer Auth: []
       parameters:
@@ -2840,7 +3765,14 @@ paths:
                 - subnet
                 - type
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /client/{clientId}:
     delete:
       description: Delete a client by its client ID.
@@ -2854,7 +3786,14 @@ paths:
           required: true
           name: clientId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     post:
       description: Update a client by its client ID.
       tags:
@@ -2882,7 +3821,14 @@ paths:
                   minLength: 1
                   maxLength: 255
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     get:
       description: Get a client by its client ID.
       tags:
@@ -2895,7 +3841,14 @@ paths:
           required: true
           name: clientId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /client/{clientId}/archive:
     post:
       description: Archive a client by its client ID.
@@ -2909,7 +3862,14 @@ paths:
           required: true
           name: clientId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /client/{clientId}/unarchive:
     post:
       description: Unarchive a client by its client ID.
@@ -2923,7 +3883,14 @@ paths:
           required: true
           name: clientId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /client/{clientId}/block:
     post:
       description: Block a client by its client ID.
@@ -2937,7 +3904,14 @@ paths:
           required: true
           name: clientId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /client/{clientId}/unblock:
     post:
       description: Unblock a client by its client ID.
@@ -2951,13 +3925,19 @@ paths:
           required: true
           name: clientId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/clients:
     get:
       description: List all clients for an organization.
       tags:
         - Client
-        - Organization
       security:
         - Bearer Auth: []
       parameters:
@@ -3035,13 +4015,19 @@ paths:
             Defaults to 'active'.
           name: status
           in: query
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/user-devices:
     get:
       description: List all user devices for an organization.
       tags:
         - Client
-        - Organization
       security:
         - Bearer Auth: []
       parameters:
@@ -3145,15 +4131,21 @@ paths:
             approval is enabled.
           name: status
           in: query
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/client/{niceId}:
     get:
       description: >-
         Get a client by orgId and niceId. NiceId is a readable ID for the site
         and unique on a per org basis.
       tags:
-        - Organization
-        - Site
+        - Client
       security:
         - Bearer Auth: []
       parameters:
@@ -3167,14 +4159,19 @@ paths:
           required: true
           name: niceId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/user/{userId}/client:
     put:
       description: Create a new client for a user and associate it with an existing olm.
       tags:
         - Client
-        - Organization
-        - User
       security:
         - Bearer Auth: []
       parameters:
@@ -3212,12 +4209,19 @@ paths:
                 - subnet
                 - type
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /resource/{resourceId}/access-token:
     post:
       description: Generate a new access token for a resource.
       tags:
-        - Resource
+        - Public Resource
         - Access Token
       security:
         - Bearer Auth: []
@@ -3242,12 +4246,18 @@ paths:
                 description:
                   type: string
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/access-tokens:
     get:
       description: List all access tokens in an organization.
       tags:
-        - Organization
         - Access Token
       security:
         - Bearer Auth: []
@@ -3269,12 +4279,19 @@ paths:
           required: false
           name: offset
           in: query
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /resource/{resourceId}/access-tokens:
     get:
-      description: List all access tokens in an organization.
+      description: List all access tokens for a resource.
       tags:
-        - Resource
+        - Public Resource
         - Access Token
       security:
         - Bearer Auth: []
@@ -3296,7 +4313,14 @@ paths:
           required: false
           name: offset
           in: query
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /access-token/{accessTokenId}:
     delete:
       description: Delete a access token.
@@ -3310,12 +4334,19 @@ paths:
           required: true
           name: accessTokenId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /idp/oidc:
     put:
       description: Create an OIDC IdP.
       tags:
-        - Identity Provider
+        - Identity Provider (Global)
       security:
         - Bearer Auth: []
       requestBody:
@@ -3353,6 +4384,13 @@ paths:
                   type: boolean
                 tags:
                   type: string
+                variant:
+                  type: string
+                  enum:
+                    - oidc
+                    - google
+                    - azure
+                  default: oidc
               required:
                 - name
                 - clientId
@@ -3362,12 +4400,19 @@ paths:
                 - identifierPath
                 - scopes
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /idp/{idpId}/oidc:
     post:
       description: Update an OIDC IdP.
       tags:
-        - Identity Provider
+        - Identity Provider (Global)
       security:
         - Bearer Auth: []
       parameters:
@@ -3409,13 +4454,26 @@ paths:
                   type: string
                 tags:
                   type: string
+                variant:
+                  type: string
+                  enum:
+                    - oidc
+                    - google
+                    - azure
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /idp/{idpId}:
     delete:
       description: Delete IDP.
       tags:
-        - Identity Provider
+        - Identity Provider (Global)
       security:
         - Bearer Auth: []
       parameters:
@@ -3430,11 +4488,18 @@ paths:
           required: false
           name: idpId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     get:
       description: Get an IDP by its IDP ID.
       tags:
-        - Identity Provider
+        - Identity Provider (Global)
       security:
         - Bearer Auth: []
       parameters:
@@ -3444,12 +4509,19 @@ paths:
           required: false
           name: idpId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /idp:
     get:
       description: List all IDP in the system.
       tags:
-        - Identity Provider
+        - Identity Provider (Global)
       security:
         - Bearer Auth: []
       parameters:
@@ -3465,12 +4537,19 @@ paths:
           required: false
           name: offset
           in: query
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /idp/{idpId}/org/{orgId}:
     put:
       description: Create an IDP policy for an existing IDP on an organization.
       tags:
-        - Identity Provider
+        - Identity Provider (Global)
       security:
         - Bearer Auth: []
       parameters:
@@ -3496,11 +4575,18 @@ paths:
                 orgMapping:
                   type: string
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     delete:
       description: Create an OIDC IdP for an organization.
       tags:
-        - Identity Provider
+        - Identity Provider (Global)
       security:
         - Bearer Auth: []
       parameters:
@@ -3515,11 +4601,18 @@ paths:
           required: true
           name: orgId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     post:
       description: Update an IDP org policy.
       tags:
-        - Identity Provider
+        - Identity Provider (Global)
       security:
         - Bearer Auth: []
       parameters:
@@ -3545,12 +4638,19 @@ paths:
                 orgMapping:
                   type: string
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /idp/{idpId}/org:
     get:
       description: List all org policies on an IDP.
       tags:
-        - Identity Provider
+        - Identity Provider (Global)
       security:
         - Bearer Auth: []
       parameters:
@@ -3572,12 +4672,18 @@ paths:
           required: false
           name: offset
           in: query
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/blueprints:
     get:
       description: List all blueprints for a organization.
       tags:
-        - Organization
         - Blueprint
       security:
         - Bearer Auth: []
@@ -3599,12 +4705,18 @@ paths:
           required: false
           name: offset
           in: query
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/blueprint:
     put:
       description: Apply a base64 encoded JSON blueprint to an organization
       tags:
-        - Organization
         - Blueprint
       security:
         - Bearer Auth: []
@@ -3625,12 +4737,18 @@ paths:
               required:
                 - blueprint
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/blueprint/{blueprintId}:
     get:
       description: Get a blueprint by its blueprint ID.
       tags:
-        - Organization
         - Blueprint
       security:
         - Bearer Auth: []
@@ -3645,12 +4763,18 @@ paths:
           required: true
           name: orgId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/api-key/{apiKeyId}:
     delete:
       description: Delete an API key.
       tags:
-        - Organization
         - API Key
       security:
         - Bearer Auth: []
@@ -3661,12 +4785,18 @@ paths:
           required: true
           name: apiKeyId
           in: path
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/api-key/{apiKeyId}/actions:
     get:
       description: List all actions set for an API key.
       tags:
-        - Organization
         - API Key
       security:
         - Bearer Auth: []
@@ -3689,11 +4819,17 @@ paths:
           required: false
           name: offset
           in: query
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
     post:
       description: Set actions for an API key. This will replace any existing actions.
       tags:
-        - Organization
         - API Key
       security:
         - Bearer Auth: []
@@ -3719,12 +4855,18 @@ paths:
               required:
                 - actionIds
               additionalProperties: false
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/api-keys:
     get:
       description: List all API keys for an organization
       tags:
-        - Organization
         - API Key
       security:
         - Bearer Auth: []
@@ -3746,12 +4888,18 @@ paths:
           required: false
           name: offset
           in: query
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/api-key:
     put:
       description: Create a new API key scoped to the organization.
       tags:
-        - Organization
         - API Key
       security:
         - Bearer Auth: []
@@ -3774,12 +4922,19 @@ paths:
                   maxLength: 255
               required:
                 - name
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/logs/request:
     get:
       description: Query the request audit log for an organization
       tags:
-        - Organization
+        - Logs
       security:
         - Bearer Auth: []
       parameters:
@@ -3852,12 +5007,19 @@ paths:
           required: false
           name: path
           in: query
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /org/{orgId}/logs/analytics:
     get:
       description: Query the request audit analytics for an organization
       tags:
-        - Organization
+        - Logs
       security:
         - Bearer Auth: []
       parameters:
@@ -3887,9 +5049,51 @@ paths:
           required: false
           name: resourceId
           in: query
-      responses: {}
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /:
     get:
       description: Health check
       tags: []
-      responses: {}
+      security:
+        - Bearer Auth: []
+      responses:
+        '*':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /openapi.json:
+    get:
+      description: Get OpenAPI specification as JSON
+      tags: []
+      security:
+        - Bearer Auth: []
+      responses:
+        '200':
+          description: OpenAPI specification as JSON
+          content:
+            application/json:
+              schema:
+                type: object
+  /openapi.yaml:
+    get:
+      description: Get OpenAPI specification as YAML
+      tags: []
+      security:
+        - Bearer Auth: []
+      responses:
+        '200':
+          description: OpenAPI specification as YAML
+          content:
+            application/yaml:
+              schema:
+                type: string

@@ -12,7 +12,7 @@ type SiteResource struct {
 	OrgID              *string  `json:"orgId,omitempty"`
 	Name               *string  `json:"name,omitempty"`
 	Mode               *string  `json:"mode,omitempty"`
-	SiteID             *int64   `json:"siteId,omitempty"`
+	SiteIDs            []int64  `json:"siteIds"`
 	Destination        *string  `json:"destination,omitempty"`
 	Enabled            *bool    `json:"enabled,omitempty"`
 	Alias              *string  `json:"alias,omitempty"`

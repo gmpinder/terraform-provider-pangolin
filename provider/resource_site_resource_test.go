@@ -53,7 +53,7 @@ resource "pangolin_site" "test" {
 
 resource "pangolin_site_resource" "test" {
   org_id      = %[3]q
-  site_id     = pangolin_site.test.id
+  site_ids    = [pangolin_site.test.id]
   name        = %[4]q
   mode        = %[5]q
   destination = %[6]q
@@ -69,7 +69,7 @@ resource "pangolin_site_resource" "test" {
 
 resource "pangolin_site_resource" "test_1" {
   org_id      = %[3]q
-  site_id     = pangolin_site.test.id
+  site_ids    = [pangolin_site.test.id]
   name        = %[4]q
   mode        = %[5]q
   destination = %[6]q
