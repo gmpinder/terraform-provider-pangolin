@@ -22,9 +22,10 @@ The provider uses Bearer Token authentication as required by the Pangolin Integr
 
 ## Compatibility
 
-| Pangolin Version | Provider Version |
-| ---------------- | ---------------- |
-| >= v1.18.0       | >= 2.0.0         |
+| Pangolin Version     | Provider Version  |
+| -------------------- | ----------------- |
+| >= v1.18.0           | >= 2.0.0          |
+| >= v1.16.1, < 1.18.0 | >= 1.0.0, < 2.0.0 |
 
 ## Building The Provider
 
