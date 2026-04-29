@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0](https://github.com/gmpinder/terraform-provider-pangolin/compare/v1.2.0...v2.0.0) (2026-04-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* Support v1.18.0 of Pangolin
+
+### Miscellaneous Chores
+
+* Support v1.18.0 of Pangolin ([f34a5b2](https://github.com/gmpinder/terraform-provider-pangolin/commit/f34a5b236c37ef67eb39ccc721ef53d9ac91e31d))
+
 ## [1.2.0](https://github.com/gmpinder/terraform-provider-pangolin/compare/v1.1.0...v1.2.0) (2026-03-28)
 
 
