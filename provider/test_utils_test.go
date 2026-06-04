@@ -9,9 +9,11 @@ import (
 )
 
 const (
-	testOrgID = "test-tf"
-	testToken = "f1l1v68jvs2j8ix.34fvctzav5t46kdnchztxz6u5ajfxt5wobs4iulv"
-	testURL   = "http://localhost:3003/v1" // Integration API port and prefix
+	testOrgID    = "test-tf"
+	testToken    = "xt346da9r1xy71z.tg4sgocmc7ecebzaw7acasxct34bbt6duzoaizqs"
+	testEmail    = "admin@example.com"
+	testPassword = "Passw0rd!"
+	testURL      = "http://localhost:3003/v1" // Integration API port and prefix
 )
 
 var (

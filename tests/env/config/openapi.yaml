@@ -33,13 +33,28 @@ paths:
           name: niceId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /site/{siteId}:
     get:
       description: Get a site by siteId.
@@ -54,13 +69,28 @@ paths:
           name: siteId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     delete:
       description: Delete a site and all its associated data.
       tags:
@@ -69,18 +99,35 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: siteId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     post:
       description: Update a site.
       tags:
@@ -89,7 +136,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: siteId
           in: path
@@ -116,13 +165,28 @@ paths:
                     - approved
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/site:
     put:
       description: Create a new site.
@@ -178,13 +242,99 @@ paths:
               name: My Site
               type: newt
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
+  /org/{orgId}/role:
+    put:
+      description: Create a role.
+      tags:
+        - Role
+      security:
+        - Bearer Auth: []
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: orgId
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                description:
+                  type: string
+                requireDeviceApproval:
+                  type: boolean
+                allowSsh:
+                  type: boolean
+                sshSudoMode:
+                  type: string
+                  enum:
+                    - none
+                    - full
+                    - commands
+                sshSudoCommands:
+                  type: array
+                  items:
+                    type: string
+                sshCreateHomeDir:
+                  type: boolean
+                sshUnixGroups:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - name
+              additionalProperties: false
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/site-resource:
     put:
       description: Create a new site resource.
@@ -227,6 +377,10 @@ paths:
                   type: array
                   items:
                     type: integer
+                siteId:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
                 destinationPort:
                   type: integer
                   minimum: 0
@@ -241,6 +395,11 @@ paths:
                   type: string
                   pattern: >-
                     ^(?:[a-zA-Z0-9*?](?:[a-zA-Z0-9*?-]{0,61}[a-zA-Z0-9*?])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$
+                  description: >-
+                    Fully qualified domain name with optional wildcards, e.g.,
+                    example.internal, *.example.internal, or
+                    host-0?.example.internal
+                  example: service.example.internal
                 userIds:
                   type: array
                   items:
@@ -255,8 +414,18 @@ paths:
                     type: integer
                 tcpPortRangeString:
                   type: string
+                  description: >-
+                    Port range string. Use "*" for all ports, a comma-separated
+                    list of ports, or ranges (e.g., "80,443,8000-9000"). Ports
+                    must be between 1 and 65535.
+                  example: 80,443,8000-9000
                 udpPortRangeString:
                   type: string
+                  description: >-
+                    Port range string. Use "*" for all ports, a comma-separated
+                    list of ports, or ranges (e.g., "80,443,8000-9000"). Ports
+                    must be between 1 and 65535.
+                  example: 80,443,8000-9000
                 disableIcmp:
                   type: boolean
                 authDaemonPort:
@@ -275,20 +444,34 @@ paths:
               required:
                 - name
                 - mode
-                - siteIds
                 - destination
                 - userIds
                 - roleIds
                 - clientIds
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /site-resource/{siteResourceId}:
     delete:
       description: Delete a site resource.
@@ -298,18 +481,35 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: siteResourceId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     get:
       description: Get a specific site resource by siteResourceId.
       tags:
@@ -333,13 +533,28 @@ paths:
           name: orgId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     post:
       description: Update a site resource.
       tags:
@@ -348,7 +563,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: siteResourceId
           in: path
@@ -366,6 +583,10 @@ paths:
                   type: array
                   items:
                     type: integer
+                siteId:
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
                 niceId:
                   type: string
                   minLength: 1
@@ -401,6 +622,11 @@ paths:
                   nullable: true
                   pattern: >-
                     ^(?:[a-zA-Z0-9*?](?:[a-zA-Z0-9*?-]{0,61}[a-zA-Z0-9*?])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$
+                  description: >-
+                    Fully qualified domain name with optional wildcards, e.g.,
+                    example.internal, *.example.internal, or
+                    host-0?.example.internal
+                  example: service.example.internal
                 userIds:
                   type: array
                   items:
@@ -415,8 +641,18 @@ paths:
                     type: integer
                 tcpPortRangeString:
                   type: string
+                  description: >-
+                    Port range string. Use "*" for all ports, a comma-separated
+                    list of ports, or ranges (e.g., "80,443,8000-9000"). Ports
+                    must be between 1 and 65535.
+                  example: 80,443,8000-9000
                 udpPortRangeString:
                   type: string
+                  description: >-
+                    Port range string. Use "*" for all ports, a comma-separated
+                    list of ports, or ranges (e.g., "80,443,8000-9000"). Ports
+                    must be between 1 and 65535.
+                  example: 80,443,8000-9000
                 disableIcmp:
                   type: boolean
                 authDaemonPort:
@@ -434,19 +670,33 @@ paths:
                 subdomain:
                   type: string
               required:
-                - siteIds
                 - userIds
                 - roleIds
                 - clientIds
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/site/{siteId}/resource/nice/{niceId}:
     get:
       description: Get a specific site resource by niceId.
@@ -466,13 +716,28 @@ paths:
           name: orgId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/site/{siteId}/resources:
     get:
       description: List site resources for a site.
@@ -482,7 +747,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: siteId
           in: path
@@ -524,13 +791,28 @@ paths:
           name: order
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/site-resources:
     get:
       description: List all site resources for an organization.
@@ -608,13 +890,28 @@ paths:
           name: siteId
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /site-resource/{siteResourceId}/roles:
     get:
       description: List all roles for a site resource.
@@ -630,13 +927,28 @@ paths:
           name: siteResourceId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     post:
       description: Set roles for a site resource. This will replace all existing roles.
       tags:
@@ -666,13 +978,28 @@ paths:
                 - roleIds
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /site-resource/{siteResourceId}/users:
     get:
       description: List all users for a site resource.
@@ -688,13 +1015,28 @@ paths:
           name: siteResourceId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     post:
       description: Set users for a site resource. This will replace all existing users.
       tags:
@@ -722,13 +1064,28 @@ paths:
                 - userIds
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /site-resource/{siteResourceId}/clients:
     get:
       description: List all clients for a site resource.
@@ -744,13 +1101,28 @@ paths:
           name: siteResourceId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     post:
       description: >-
         Set clients for a site resource. This will replace all existing clients.
@@ -782,13 +1154,28 @@ paths:
                 - clientIds
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /site-resource/{siteResourceId}/roles/add:
     post:
       description: Add a single role to a site resource.
@@ -817,13 +1204,28 @@ paths:
                 - roleId
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /site-resource/{siteResourceId}/roles/remove:
     post:
       description: Remove a single role from a site resource.
@@ -852,13 +1254,28 @@ paths:
                 - roleId
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /site-resource/{siteResourceId}/users/add:
     post:
       description: Add a single user to a site resource.
@@ -885,13 +1302,28 @@ paths:
                 - userId
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /site-resource/{siteResourceId}/users/remove:
     post:
       description: Remove a single user from a site resource.
@@ -918,13 +1350,28 @@ paths:
                 - userId
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /site-resource/{siteResourceId}/clients/add:
     post:
       description: >-
@@ -955,13 +1402,28 @@ paths:
                 - clientId
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /client/{clientId}/site-resources:
     post:
       description: Add a machine client to multiple site resources at once.
@@ -971,7 +1433,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: clientId
           in: path
@@ -992,13 +1456,28 @@ paths:
                 - siteResourceIds
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /site-resource/{siteResourceId}/clients/remove:
     post:
       description: >-
@@ -1029,13 +1508,28 @@ paths:
                 - clientId
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /target/{targetId}:
     get:
       description: Get a target.
@@ -1045,18 +1539,35 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: targetId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     delete:
       description: Delete a target.
       tags:
@@ -1065,18 +1576,35 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: targetId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     post:
       description: Update a target.
       tags:
@@ -1085,7 +1613,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: targetId
           in: path
@@ -1217,13 +1747,28 @@ paths:
                 - ip
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /resource/{resourceId}/target:
     put:
       description: Create a target for a resource.
@@ -1234,7 +1779,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: resourceId
           in: path
@@ -1366,13 +1913,28 @@ paths:
                 - port
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /resource/{resourceId}/targets:
     get:
       description: List targets for a resource.
@@ -1383,7 +1945,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: resourceId
           in: path
@@ -1400,13 +1964,28 @@ paths:
           name: offset
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/sites:
     get:
       description: List all sites in an organization
@@ -1482,13 +2061,28 @@ paths:
           name: status
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/pick-site-defaults:
     get:
       description: >-
@@ -1505,13 +2099,61 @@ paths:
           name: orgId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties:
+                      exitNodeId:
+                        type: number
+                      address:
+                        type: string
+                      publicKey:
+                        type: string
+                      name:
+                        type: string
+                      listenPort:
+                        type: number
+                      endpoint:
+                        type: string
+                      subnet:
+                        type: string
+                      newtId:
+                        type: string
+                      newtSecret:
+                        type: string
+                      clientAddress:
+                        type: string
+                    required:
+                      - exitNodeId
+                      - address
+                      - publicKey
+                      - name
+                      - listenPort
+                      - endpoint
+                      - subnet
+                      - newtId
+                      - newtSecret
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - data
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}:
     get:
       description: Get an organization
@@ -1526,13 +2168,38 @@ paths:
           name: orgId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties:
+                      org:
+                        type: object
+                        properties: {}
+                        additionalProperties:
+                          nullable: true
+                    required:
+                      - org
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - data
+                  - success
+                  - error
+                  - message
+                  - status
     delete:
       description: Delete an organization
       tags:
@@ -1546,13 +2213,28 @@ paths:
           name: orgId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     post:
       description: Update an organization
       tags:
@@ -1597,13 +2279,28 @@ paths:
                   minimum: -1
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /resource/{resourceId}/roles:
     post:
       description: Set roles for a resource. This will replace all existing roles.
@@ -1614,7 +2311,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: resourceId
           in: path
@@ -1634,13 +2333,28 @@ paths:
                 - roleIds
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     get:
       description: List all roles for a resource.
       tags:
@@ -1650,74 +2364,35 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: resourceId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
-  /org/{orgId}/role:
-    put:
-      description: Create a role.
-      tags:
-        - Role
-      security:
-        - Bearer Auth: []
-      parameters:
-        - schema:
-            type: string
-          required: true
-          name: orgId
-          in: path
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                  minLength: 1
-                  maxLength: 255
-                description:
-                  type: string
-                requireDeviceApproval:
-                  type: boolean
-                allowSsh:
-                  type: boolean
-                sshSudoMode:
-                  type: string
-                  enum:
-                    - none
-                    - full
-                    - commands
-                sshSudoCommands:
-                  type: array
-                  items:
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
                     type: string
-                sshCreateHomeDir:
-                  type: boolean
-                sshUnixGroups:
-                  type: array
-                  items:
-                    type: string
-              required:
-                - name
-              additionalProperties: false
-      responses:
-        '*':
-          description: ''
-          content:
-            application/json:
-              schema:
-                type: object
-                properties: {}
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /role/{roleId}:
     delete:
       description: Delete a role.
@@ -1727,7 +2402,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: roleId
           in: path
@@ -1738,18 +2415,35 @@ paths:
               type: object
               properties:
                 roleId:
-                  type: string
+                  type: integer
+                  minimum: 0
+                  exclusiveMinimum: true
               required:
                 - roleId
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     get:
       description: Get a role.
       tags:
@@ -1758,18 +2452,35 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: roleId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     post:
       description: Update a role.
       tags:
@@ -1778,7 +2489,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: roleId
           in: path
@@ -1816,13 +2529,28 @@ paths:
                     type: string
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/roles:
     get:
       description: List roles.
@@ -1878,13 +2606,28 @@ paths:
           name: order
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org:
     put:
       description: Create a new organization
@@ -1919,13 +2662,28 @@ paths:
                 - utilitySubnet
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /orgs:
     get:
       description: List all organizations in the system.
@@ -1947,13 +2705,54 @@ paths:
           name: offset
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties:
+                      orgs:
+                        type: array
+                        items:
+                          type: object
+                          properties: {}
+                          additionalProperties:
+                            nullable: true
+                      pagination:
+                        type: object
+                        properties:
+                          total:
+                            type: number
+                          limit:
+                            type: number
+                          offset:
+                            type: number
+                        required:
+                          - total
+                          - limit
+                          - offset
+                    required:
+                      - orgs
+                      - pagination
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - data
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/user/{userId}/check:
     get:
       description: Check a user's access in an organization.
@@ -1974,13 +2773,28 @@ paths:
           name: orgId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/reset-bandwidth:
     post:
       description: Reset all sites in selected organization bandwidth counters.
@@ -1996,13 +2810,28 @@ paths:
           name: orgId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/resource/{niceId}:
     get:
       description: >-
@@ -2024,13 +2853,28 @@ paths:
           name: niceId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /resource/{resourceId}:
     get:
       description: Get a resource by resourceId.
@@ -2045,13 +2889,28 @@ paths:
           name: resourceId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     delete:
       description: Delete a resource.
       tags:
@@ -2060,18 +2919,35 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: resourceId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     post:
       description: Update a resource.
       tags:
@@ -2080,7 +2956,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: resourceId
           in: path
@@ -2192,13 +3070,28 @@ paths:
                       minimum: 1
                   additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/resource:
     put:
       description: Create a resource.
@@ -2270,13 +3163,28 @@ paths:
                     - proxyPort
                   additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/resources:
     get:
       description: List resources for an organization.
@@ -2395,13 +3303,28 @@ paths:
           name: siteId
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /resource/{resourceId}/users:
     post:
       description: Set users for a resource. This will replace all existing users.
@@ -2412,7 +3335,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: resourceId
           in: path
@@ -2430,13 +3355,28 @@ paths:
                 - userIds
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     get:
       description: List all users for a resource.
       tags:
@@ -2446,18 +3386,35 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: resourceId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /resource/{resourceId}/password:
     post:
       description: >-
@@ -2469,7 +3426,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: resourceId
           in: path
@@ -2488,13 +3447,28 @@ paths:
                 - password
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /resource/{resourceId}/pincode:
     post:
       description: >-
@@ -2506,7 +3480,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: resourceId
           in: path
@@ -2525,13 +3501,28 @@ paths:
                 - pincode
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /resource/{resourceId}/whitelist:
     post:
       description: >-
@@ -2543,7 +3534,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: resourceId
           in: path
@@ -2566,13 +3559,28 @@ paths:
                 - emails
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     get:
       description: Get the whitelist of emails for a specific resource.
       tags:
@@ -2581,18 +3589,35 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: resourceId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /resource/{resourceId}/rule:
     put:
       description: Create a resource rule.
@@ -2603,7 +3628,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: resourceId
           in: path
@@ -2642,13 +3669,28 @@ paths:
                 - priority
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /resource/{resourceId}/rule/{ruleId}:
     delete:
       description: Delete a resource rule.
@@ -2659,23 +3701,42 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: ruleId
           in: path
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: resourceId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     post:
       description: Update a resource rule.
       tags:
@@ -2685,12 +3746,16 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: ruleId
           in: path
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: resourceId
           in: path
@@ -2726,13 +3791,28 @@ paths:
                 - priority
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /resource/{resourceId}/rules:
     get:
       description: List rules for a resource.
@@ -2743,7 +3823,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: resourceId
           in: path
@@ -2760,13 +3842,28 @@ paths:
           name: offset
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /resource/{resourceId}/header-auth:
     post:
       description: >-
@@ -2778,7 +3875,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: resourceId
           in: path
@@ -2807,13 +3906,28 @@ paths:
                 - extendedCompatibility
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /resource/{resourceId}/whitelist/add:
     post:
       description: Add a single email to the resource whitelist.
@@ -2823,7 +3937,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: resourceId
           in: path
@@ -2843,13 +3959,28 @@ paths:
                 - email
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /resource/{resourceId}/whitelist/remove:
     post:
       description: Remove a single email from the resource whitelist.
@@ -2859,7 +3990,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: resourceId
           in: path
@@ -2879,13 +4012,28 @@ paths:
                 - email
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /resource/{resourceId}/roles/add:
     post:
       description: Add a single role to a resource.
@@ -2914,13 +4062,28 @@ paths:
                 - roleId
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /resource/{resourceId}/roles/remove:
     post:
       description: Remove a single role from a resource.
@@ -2949,13 +4112,28 @@ paths:
                 - roleId
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /resource/{resourceId}/users/add:
     post:
       description: Add a single user to a resource.
@@ -2982,13 +4160,28 @@ paths:
                 - userId
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /resource/{resourceId}/users/remove:
     post:
       description: Remove a single user from a resource.
@@ -3015,13 +4208,28 @@ paths:
                 - userId
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/resources-names:
     get:
       description: List all resource names for an organization.
@@ -3036,13 +4244,28 @@ paths:
           name: orgId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/domains:
     get:
       description: List all domains for a organization.
@@ -3069,13 +4292,87 @@ paths:
           name: offset
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties:
+                      domains:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            domainId:
+                              type: string
+                            baseDomain:
+                              type: string
+                            verified:
+                              type: boolean
+                            type:
+                              type: string
+                              nullable: true
+                            failed:
+                              type: boolean
+                            tries:
+                              type: number
+                            configManaged:
+                              type: boolean
+                            certResolver:
+                              type: string
+                              nullable: true
+                            preferWildcardCert:
+                              type: boolean
+                              nullable: true
+                            errorMessage:
+                              type: string
+                              nullable: true
+                          required:
+                            - domainId
+                            - baseDomain
+                            - verified
+                            - type
+                            - failed
+                            - tries
+                            - configManaged
+                            - certResolver
+                            - preferWildcardCert
+                            - errorMessage
+                      pagination:
+                        type: object
+                        properties:
+                          total:
+                            type: number
+                          limit:
+                            type: number
+                          offset:
+                            type: number
+                        required:
+                          - total
+                          - limit
+                          - offset
+                    required:
+                      - domains
+                      - pagination
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - data
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/domain/{domainId}:
     get:
       description: Get a domain by domainId.
@@ -3095,13 +4392,28 @@ paths:
           name: orgId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     patch:
       description: Update a domain by domainId.
       tags:
@@ -3120,13 +4432,43 @@ paths:
           name: orgId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties:
+                      domainId:
+                        type: string
+                      certResolver:
+                        type: string
+                        nullable: true
+                      preferWildcardCert:
+                        type: boolean
+                        nullable: true
+                    required:
+                      - domainId
+                      - certResolver
+                      - preferWildcardCert
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - data
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/domain/{domainId}/dns-records:
     get:
       description: Get all DNS records for a domain by domainId.
@@ -3146,13 +4488,28 @@ paths:
           name: orgId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/user/{userId}:
     delete:
       description: Remove a user from an organization.
@@ -3172,13 +4529,28 @@ paths:
           name: orgId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     get:
       description: Get a user in an organization.
       tags:
@@ -3197,13 +4569,28 @@ paths:
           name: orgId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     post:
       description: Update a user in an org.
       tags:
@@ -3231,13 +4618,28 @@ paths:
                   type: boolean
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/users:
     get:
       description: List users in an organization.
@@ -3324,13 +4726,28 @@ paths:
           name: role_id
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /role/{roleId}/add/{userId}:
     post:
       description: >-
@@ -3343,8 +4760,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
-          required: true
+            type: number
+            nullable: true
+          required: false
           name: roleId
           in: path
         - schema:
@@ -3353,13 +4771,28 @@ paths:
           name: userId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/create-invite:
     post:
       description: Invite a user to join an organization.
@@ -3407,13 +4840,38 @@ paths:
                 - validHours
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties:
+                      inviteLink:
+                        type: string
+                      expiresAt:
+                        type: number
+                    required:
+                      - inviteLink
+                      - expiresAt
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - data
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/user-by-username:
     get:
       description: >-
@@ -3443,13 +4901,28 @@ paths:
           name: idpId
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /users:
     get:
       description: List non–server-admin users (server admin).
@@ -3527,13 +5000,28 @@ paths:
           name: two_factor
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /user/{userId}:
     get:
       description: Get a user by ID.
@@ -3549,13 +5037,28 @@ paths:
           name: userId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/invitations:
     get:
       description: List invitations in an organization.
@@ -3582,13 +5085,28 @@ paths:
           name: offset
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/invitations/{inviteId}:
     delete:
       description: Remove an open invitation from an organization
@@ -3608,13 +5126,28 @@ paths:
           name: inviteId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/user:
     put:
       description: Create an organization user.
@@ -3665,13 +5198,31 @@ paths:
                 - username
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties: {}
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - data
+                  - success
+                  - error
+                  - message
+                  - status
   /user/{userId}/2fa:
     post:
       description: Update a user's 2FA status.
@@ -3697,13 +5248,38 @@ paths:
                 - twoFactorSetupRequested
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties:
+                      userId:
+                        type: string
+                      twoFactorRequested:
+                        type: boolean
+                    required:
+                      - userId
+                      - twoFactorRequested
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - data
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/pick-client-defaults:
     get:
       description: Return pre-requisite data for creating a client.
@@ -3718,13 +5294,41 @@ paths:
           name: orgId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties:
+                      olmId:
+                        type: string
+                      olmSecret:
+                        type: string
+                      subnet:
+                        type: string
+                    required:
+                      - olmId
+                      - olmSecret
+                      - subnet
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - data
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/client:
     put:
       description: Create a new client for an organization.
@@ -3766,13 +5370,28 @@ paths:
                 - type
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /client/{clientId}:
     delete:
       description: Delete a client by its client ID.
@@ -3782,18 +5401,35 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: clientId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     post:
       description: Update a client by its client ID.
       tags:
@@ -3802,7 +5438,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: clientId
           in: path
@@ -3822,13 +5460,28 @@ paths:
                   maxLength: 255
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     get:
       description: Get a client by its client ID.
       tags:
@@ -3842,13 +5495,28 @@ paths:
           name: clientId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /client/{clientId}/archive:
     post:
       description: Archive a client by its client ID.
@@ -3858,18 +5526,35 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: clientId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /client/{clientId}/unarchive:
     post:
       description: Unarchive a client by its client ID.
@@ -3879,18 +5564,35 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: clientId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /client/{clientId}/block:
     post:
       description: Block a client by its client ID.
@@ -3900,18 +5602,35 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: clientId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /client/{clientId}/unblock:
     post:
       description: Unblock a client by its client ID.
@@ -3921,18 +5640,35 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: clientId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/clients:
     get:
       description: List all clients for an organization.
@@ -4016,13 +5752,28 @@ paths:
           name: status
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/user-devices:
     get:
       description: List all user devices for an organization.
@@ -4132,13 +5883,28 @@ paths:
           name: status
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/client/{niceId}:
     get:
       description: >-
@@ -4160,13 +5926,28 @@ paths:
           name: niceId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/user/{userId}/client:
     put:
       description: Create a new client for a user and associate it with an existing olm.
@@ -4210,13 +5991,104 @@ paths:
                 - type
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
+  /client/{clientId}/verify-associations-cache:
+    get:
+      description: >-
+        Read-only check of whether the client's site/site-resource association
+        cache matches what the current permissions imply.
+      tags:
+        - Client
+      security:
+        - Bearer Auth: []
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: clientId
+          in: path
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
+  /client/{clientId}/rebuild-associations-cache:
+    post:
+      description: >-
+        Rebuild the client's site/site-resource association cache based on
+        current permissions.
+      tags:
+        - Client
+      security:
+        - Bearer Auth: []
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: clientId
+          in: path
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /resource/{resourceId}/access-token:
     post:
       description: Generate a new access token for a resource.
@@ -4227,7 +6099,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: resourceId
           in: path
@@ -4247,13 +6121,28 @@ paths:
                   type: string
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/access-tokens:
     get:
       description: List all access tokens in an organization.
@@ -4280,13 +6169,28 @@ paths:
           name: offset
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /resource/{resourceId}/access-tokens:
     get:
       description: List all access tokens for a resource.
@@ -4314,13 +6218,28 @@ paths:
           name: offset
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /access-token/{accessTokenId}:
     delete:
       description: Delete a access token.
@@ -4335,13 +6254,28 @@ paths:
           name: accessTokenId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /idp/oidc:
     put:
       description: Create an OIDC IdP.
@@ -4401,13 +6335,38 @@ paths:
                 - scopes
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties:
+                      idpId:
+                        type: number
+                      redirectUrl:
+                        type: string
+                    required:
+                      - idpId
+                      - redirectUrl
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - data
+                  - success
+                  - error
+                  - message
+                  - status
   /idp/{idpId}/oidc:
     post:
       description: Update an OIDC IdP.
@@ -4462,13 +6421,35 @@ paths:
                     - azure
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties:
+                      idpId:
+                        type: number
+                    required:
+                      - idpId
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - data
+                  - success
+                  - error
+                  - message
+                  - status
   /idp/{idpId}:
     delete:
       description: Delete IDP.
@@ -4489,13 +6470,28 @@ paths:
           name: idpId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     get:
       description: Get an IDP by its IDP ID.
       tags:
@@ -4510,13 +6506,28 @@ paths:
           name: idpId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /idp:
     get:
       description: List all IDP in the system.
@@ -4538,13 +6549,77 @@ paths:
           name: offset
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties:
+                      idps:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            idpId:
+                              type: number
+                            name:
+                              type: string
+                            type:
+                              type: string
+                            variant:
+                              type: string
+                              nullable: true
+                            orgCount:
+                              type: number
+                            autoProvision:
+                              type: boolean
+                              nullable: true
+                            tags:
+                              type: string
+                              nullable: true
+                          required:
+                            - idpId
+                            - name
+                            - type
+                            - variant
+                            - orgCount
+                            - autoProvision
+                            - tags
+                      pagination:
+                        type: object
+                        properties:
+                          total:
+                            type: number
+                          limit:
+                            type: number
+                          offset:
+                            type: number
+                        required:
+                          - total
+                          - limit
+                          - offset
+                    required:
+                      - idps
+                      - pagination
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - data
+                  - success
+                  - error
+                  - message
+                  - status
   /idp/{idpId}/org/{orgId}:
     put:
       description: Create an IDP policy for an existing IDP on an organization.
@@ -4576,13 +6651,31 @@ paths:
                   type: string
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties: {}
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - data
+                  - success
+                  - error
+                  - message
+                  - status
     delete:
       description: Create an OIDC IdP for an organization.
       tags:
@@ -4602,13 +6695,28 @@ paths:
           name: orgId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
     post:
       description: Update an IDP org policy.
       tags:
@@ -4639,13 +6747,31 @@ paths:
                   type: string
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties: {}
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - data
+                  - success
+                  - error
+                  - message
+                  - status
   /idp/{idpId}/org:
     get:
       description: List all org policies on an IDP.
@@ -4673,13 +6799,63 @@ paths:
           name: offset
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties:
+                      policies:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            idpId:
+                              type: number
+                            orgId:
+                              type: string
+                            assignDefaultOrgRoleId:
+                              type: number
+                              nullable: true
+                          required:
+                            - idpId
+                            - orgId
+                            - assignDefaultOrgRoleId
+                      pagination:
+                        type: object
+                        properties:
+                          total:
+                            type: number
+                          limit:
+                            type: number
+                          offset:
+                            type: number
+                        required:
+                          - total
+                          - limit
+                          - offset
+                    required:
+                      - policies
+                      - pagination
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - data
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/blueprints:
     get:
       description: List all blueprints for a organization.
@@ -4706,13 +6882,28 @@ paths:
           name: offset
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/blueprint:
     put:
       description: Apply a base64 encoded JSON blueprint to an organization
@@ -4738,13 +6929,28 @@ paths:
                 - blueprint
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/blueprint/{blueprintId}:
     get:
       description: Get a blueprint by its blueprint ID.
@@ -4754,7 +6960,9 @@ paths:
         - Bearer Auth: []
       parameters:
         - schema:
-            type: string
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
           required: true
           name: blueprintId
           in: path
@@ -4764,13 +6972,28 @@ paths:
           name: orgId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/api-key/{apiKeyId}:
     delete:
       description: Delete an API key.
@@ -4786,13 +7009,28 @@ paths:
           name: apiKeyId
           in: path
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/api-key/{apiKeyId}/actions:
     get:
       description: List all actions set for an API key.
@@ -4820,13 +7058,56 @@ paths:
           name: offset
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties:
+                      actions:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            actionId:
+                              type: string
+                          required:
+                            - actionId
+                      pagination:
+                        type: object
+                        properties:
+                          total:
+                            type: number
+                          limit:
+                            type: number
+                          offset:
+                            type: number
+                        required:
+                          - total
+                          - limit
+                          - offset
+                    required:
+                      - actions
+                      - pagination
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - data
+                  - success
+                  - error
+                  - message
+                  - status
     post:
       description: Set actions for an API key. This will replace any existing actions.
       tags:
@@ -4856,13 +7137,28 @@ paths:
                 - actionIds
               additionalProperties: false
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/api-keys:
     get:
       description: List all API keys for an organization
@@ -4889,13 +7185,68 @@ paths:
           name: offset
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties:
+                      apiKeys:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            apiKeyId:
+                              type: string
+                            orgId:
+                              type: string
+                            lastChars:
+                              type: string
+                            createdAt:
+                              type: string
+                            name:
+                              type: string
+                          required:
+                            - apiKeyId
+                            - orgId
+                            - lastChars
+                            - createdAt
+                            - name
+                      pagination:
+                        type: object
+                        properties:
+                          total:
+                            type: number
+                          limit:
+                            type: number
+                          offset:
+                            type: number
+                        required:
+                          - total
+                          - limit
+                          - offset
+                    required:
+                      - apiKeys
+                      - pagination
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - data
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/api-key:
     put:
       description: Create a new API key scoped to the organization.
@@ -4923,13 +7274,47 @@ paths:
               required:
                 - name
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    type: object
+                    nullable: true
+                    properties:
+                      apiKeyId:
+                        type: string
+                      name:
+                        type: string
+                      apiKey:
+                        type: string
+                      lastChars:
+                        type: string
+                      createdAt:
+                        type: string
+                    required:
+                      - apiKeyId
+                      - name
+                      - apiKey
+                      - lastChars
+                      - createdAt
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - data
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/logs/request:
     get:
       description: Query the request audit log for an organization
@@ -5008,13 +7393,28 @@ paths:
           name: path
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /org/{orgId}/logs/analytics:
     get:
       description: Query the request audit analytics for an organization
@@ -5050,13 +7450,28 @@ paths:
           name: resourceId
           in: query
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /:
     get:
       description: Health check
@@ -5064,13 +7479,28 @@ paths:
       security:
         - Bearer Auth: []
       responses:
-        '*':
-          description: ''
+        '200':
+          description: Successful response
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  data:
+                    nullable: true
+                  success:
+                    type: boolean
+                  error:
+                    type: boolean
+                  message:
+                    type: string
+                  status:
+                    type: number
+                required:
+                  - success
+                  - error
+                  - message
+                  - status
   /openapi.json:
     get:
       description: Get OpenAPI specification as JSON

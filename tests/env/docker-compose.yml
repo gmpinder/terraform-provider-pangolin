@@ -21,11 +21,12 @@ services:
       - 443:443
       - 80:80
   pangolin:
-    image: docker.io/fosrl/pangolin:latest
+    # image: docker.io/fosrl/pangolin:latest
+    image: harbor.jpnet.dev/fosrl/pangolin:latest
     container_name: pangolin-test
     restart: unless-stopped
     environment:
-      - PANGOLIN_CONFIG=/app/config/config.yml
+      PANGOLIN_CONFIG: /app/config/config.yml
     volumes:
       - ./config:/app/config
     ports:
