@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0](https://github.com/gmpinder/terraform-provider-pangolin/compare/v1.2.0...v2.0.0) (2026-06-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* Support v1.18.0 of Pangolin
+
+### Features
+
+* Add pangolin_idp_oidc resource ([#6](https://github.com/gmpinder/terraform-provider-pangolin/issues/6)) ([a0edfe4](https://github.com/gmpinder/terraform-provider-pangolin/commit/a0edfe48e85d1f4b217f2826de03d7818c9ec982))
+* Add users and roles properties on pangolin_resource ([c589000](https://github.com/gmpinder/terraform-provider-pangolin/commit/c589000df653dcb83bbfc8aedfe9fe79edd58240))
+
+
+### Miscellaneous Chores
+
+* Support v1.18.0 of Pangolin ([f34a5b2](https://github.com/gmpinder/terraform-provider-pangolin/commit/f34a5b236c37ef67eb39ccc721ef53d9ac91e31d))
+
 ## [1.2.0](https://github.com/gmpinder/terraform-provider-pangolin/compare/v1.1.0...v1.2.0) (2026-03-28)
 
 
