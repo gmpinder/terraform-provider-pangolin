@@ -105,6 +105,33 @@ func TestAccResource_WithEmailWhitelist(t *testing.T) {
 	})
 }
 
+func TestAccResource_WithRoles(t *testing.T) {
+	if os.Getenv("TF_ACC") == "" {
+		t.Skip("Acceptance tests skipped unless env 'TF_ACC' set")
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceConfigWithRoles(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("pangolin_resource.test", "sso", "true"),
+					resource.TestCheckResourceAttr("pangolin_resource.test", "roles.#", "1"),
+				),
+			},
+			{
+				Config: testAccResourceConfigWithRolesUpdated(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("pangolin_resource.test", "sso", "true"),
+					resource.TestCheckResourceAttr("pangolin_resource.test", "roles.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccResource_WithHeaders(t *testing.T) {
 	if os.Getenv("TF_ACC") == "" {
 		t.Skip("Acceptance tests skipped unless env 'TF_ACC' set")
@@ -275,6 +302,53 @@ resource "pangolin_resource" "test" {
 	        value = "another-value"
 	    }
 	]
+}
+`, testURL, testToken, testOrgID)
+}
+
+func testAccResourceConfigWithRoles() string {
+	return fmt.Sprintf(`
+provider "pangolin" {
+    base_url = %[1]q
+    token    = %[2]q
+}
+
+resource "pangolin_role" "test" {
+  org_id      = %[3]q
+  name        = "Test"
+  description = "Test role"
+}
+
+resource "pangolin_resource" "test" {
+    org_id                   = %[3]q
+    name                     = "test-email-whitelist-resource"
+    protocol                 = "tcp"
+    http                     = true
+    subdomain                = "test-email-updated"
+    domain_id                = "local"
+    enabled                  = true
+    sso                      = true
+    roles                    = [pangolin_role.test.id]
+}
+`, testURL, testToken, testOrgID)
+}
+
+func testAccResourceConfigWithRolesUpdated() string {
+	return fmt.Sprintf(`
+provider "pangolin" {
+    base_url = %[1]q
+    token    = %[2]q
+}
+
+resource "pangolin_resource" "test" {
+    org_id                   = %[3]q
+    name                     = "test-email-whitelist-resource"
+    protocol                 = "tcp"
+    http                     = true
+    subdomain                = "test-email-updated"
+    domain_id                = "local"
+    enabled                  = true
+    sso                      = true
 }
 `, testURL, testToken, testOrgID)
 }

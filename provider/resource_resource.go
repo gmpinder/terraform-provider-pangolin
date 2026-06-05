@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -62,6 +63,8 @@ type resourceResourceModel struct {
 	ProxyProtocolVersion  types.Int32  `tfsdk:"proxy_protocol_version"`
 	PostAuthPath          types.String `tfsdk:"post_auth_path"`
 	EmailWhiteList        types.List   `tfsdk:"email_whitelist"`
+	Roles                 types.List   `tfsdk:"roles"`
+	Users                 types.List   `tfsdk:"users"`
 }
 
 type resourceHeader struct {
@@ -91,6 +94,8 @@ func (r *resourceResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 		path.MatchRoot("email_whitelist_enabled"),
 		path.MatchRoot("block_access"),
 		path.MatchRoot("email_whitelist"),
+		path.MatchRoot("users"),
+		path.MatchRoot("roles"),
 	}
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages an app-style resource (HTTP/TCP/UDP).",
@@ -298,6 +303,36 @@ func (r *resourceResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"users": schema.ListAttribute{
+				Optional:            true,
+				Computed:            true,
+				ElementType:         types.StringType,
+				Default:             listdefault.StaticValue(types.ListValueMust(types.StringType, []attr.Value{})),
+				MarkdownDescription: "A list of user IDs to give access to the resource.",
+				Validators: []validator.List{
+					listvalidator.AlsoRequires(path.MatchRoot("sso")),
+					listvalidator.UniqueValues(),
+					listvalidator.ConflictsWith(proxyExpressions...),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"roles": schema.ListAttribute{
+				Optional:            true,
+				Computed:            true,
+				ElementType:         types.Int64Type,
+				Default:             listdefault.StaticValue(types.ListValueMust(types.Int64Type, []attr.Value{})),
+				MarkdownDescription: "A list of role IDs to give access to the resource.",
+				Validators: []validator.List{
+					listvalidator.AlsoRequires(path.MatchRoot("sso")),
+					listvalidator.UniqueValues(),
+					listvalidator.ConflictsWith(proxyExpressions...),
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+			},
 
 			// `http` false
 			"proxy_port": schema.Int32Attribute{
@@ -354,17 +389,7 @@ func (r *resourceResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	if data.Http.ValueBool() && data.DomainID.IsNull() {
-		resp.Diagnostics.AddError("`domain_id` is null", "`domain_id` must not be null if `http` is true.")
-	}
-
-	if !data.Http.ValueBool() && data.ProxyPort.IsNull() {
-		resp.Diagnostics.AddError("`proxy_port` is null", "`proxy_port` must not be null if `http` is false.")
-	}
-
-	if !data.EmailWhitelistEnabled.ValueBool() && len(data.EmailWhiteList.Elements()) > 0 {
-		resp.Diagnostics.AddError("`email_whitelist_enabled` is `false`", "`email_whitelist_enabled` must be `true` to set `email_whitelist`")
-	}
+	checkConflicts(data, &resp.Diagnostics)
 
 	var headers []client.ResourceHeader
 
@@ -491,9 +516,69 @@ func (r *resourceResource) Create(ctx context.Context, req resource.CreateReques
 		}
 	}
 
+	if data.Sso.ValueBool() {
+		var roles []int64
+		diags := data.Roles.ElementsAs(ctx, &roles, false)
+
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+		}
+		err = r.client.UpdateResourceRoles(*created.ID, roles)
+
+		if err != nil {
+			resp.Diagnostics.AddError("error updating roles", err.Error())
+		}
+
+		var users []string
+		diags = data.Users.ElementsAs(ctx, &users, false)
+
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+		}
+		err = r.client.UpdateResourceUsers(*created.ID, users)
+
+		if err != nil {
+			resp.Diagnostics.AddError("error updating users", err.Error())
+		}
+	}
+
 	data.ID = types.Int64PointerValue(created.ID)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func checkConflicts(data resourceResourceModel, diags *diag.Diagnostics) {
+	if data.Http.ValueBool() && data.DomainID.IsNull() {
+		diags.AddError("`domain_id` is null", "`domain_id` must not be null if `http` is true.")
+	}
+
+	if !data.Http.ValueBool() && data.ProxyPort.IsNull() {
+		diags.AddError("`proxy_port` is null", "`proxy_port` must not be null if `http` is false.")
+	}
+
+	if !data.Http.ValueBool() && data.EmailWhitelistEnabled.ValueBool() {
+		diags.AddError("`http` is `false`", "`http` must be `true` if `email_whitelist_enabled` is `true`")
+	}
+
+	if !data.EmailWhitelistEnabled.ValueBool() && len(data.EmailWhiteList.Elements()) > 0 {
+		diags.AddError("`email_whitelist_enabled` is `false`", "`email_whitelist_enabled` must be `true` to set `email_whitelist`")
+	}
+
+	if !data.Sso.ValueBool() && len(data.Roles.Elements()) > 0 {
+		diags.AddError("`sso` is `false`", "`sso` must be `true` to set `roles`")
+	}
+
+	if !data.Sso.ValueBool() && len(data.Users.Elements()) > 0 {
+		diags.AddError("`sso` is `false`", "`sso` must be `true` to set `users`")
+	}
+
+	if !data.Http.ValueBool() && len(data.Roles.Elements()) > 0 {
+		diags.AddError("`http` is `false`", "`http` must be `true` to set `roles`")
+	}
+
+	if !data.Http.ValueBool() && len(data.Users.Elements()) > 0 {
+		diags.AddError("`http` is `false`", "`http` must be `true` to set `users`")
+	}
 }
 
 func (r *resourceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -534,14 +619,42 @@ func (r *resourceResource) Read(ctx context.Context, req resource.ReadRequest, r
 		emails, err := r.client.GetEmailWhiteList(*res.ID)
 		if err != nil {
 			resp.Diagnostics.AddError("error reading email whitelist", err.Error())
-			return
-		}
-		list, diags := types.ListValueFrom(ctx, types.StringType, emails)
-
-		if diags.HasError() {
-			resp.Diagnostics.Append(diags...)
 		} else {
-			data.EmailWhiteList = list
+			list, diags := types.ListValueFrom(ctx, types.StringType, emails)
+
+			if diags.HasError() {
+				resp.Diagnostics.Append(diags...)
+			} else {
+				data.EmailWhiteList = list
+			}
+		}
+	}
+
+	if data.Sso.ValueBool() {
+		users, err := r.client.GetResourceUsers(*res.ID)
+		if err != nil {
+			resp.Diagnostics.AddError("error getting user list", err.Error())
+		} else {
+			list, diags := types.ListValueFrom(ctx, types.StringType, users)
+
+			if diags.HasError() {
+				resp.Diagnostics.Append(diags...)
+			} else {
+				data.Users = list
+			}
+		}
+
+		roles, err := r.client.GetResourceRoles(*res.ID)
+		if err != nil {
+			resp.Diagnostics.AddError("error getting user list", err.Error())
+		} else {
+			list, diags := types.ListValueFrom(ctx, types.Int64Type, roles)
+
+			if diags.HasError() {
+				resp.Diagnostics.Append(diags...)
+			} else {
+				data.Roles = list
+			}
 		}
 	}
 
@@ -565,9 +678,7 @@ func (r *resourceResource) Update(ctx context.Context, req resource.UpdateReques
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
-	if !data.EmailWhitelistEnabled.ValueBool() && len(data.EmailWhiteList.Elements()) > 0 {
-		resp.Diagnostics.AddError("`email_whitelist_enabled` is `false`", "`email_whitelist_enabled` must be `true` to set `email_whitelist`")
-	}
+	checkConflicts(data, &resp.Diagnostics)
 
 	var headers []client.ResourceHeader
 
@@ -631,6 +742,34 @@ func (r *resourceResource) Update(ctx context.Context, req resource.UpdateReques
 
 			if err != nil {
 				resp.Diagnostics.AddError("error updating email whitelist", err.Error())
+			}
+		}
+	}
+
+	if data.Sso.ValueBool() {
+		var roles []int64
+		diags := data.Roles.ElementsAs(ctx, &roles, false)
+
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+		} else {
+			err = r.client.UpdateResourceRoles(state.ID.ValueInt64(), roles)
+
+			if err != nil {
+				resp.Diagnostics.AddError("error updating roles", err.Error())
+			}
+		}
+
+		var users []string
+		diags = data.Users.ElementsAs(ctx, &users, false)
+
+		if diags.HasError() {
+			resp.Diagnostics.Append(diags...)
+		} else {
+			err = r.client.UpdateResourceUsers(state.ID.ValueInt64(), users)
+
+			if err != nil {
+				resp.Diagnostics.AddError("error updating users", err.Error())
 			}
 		}
 	}

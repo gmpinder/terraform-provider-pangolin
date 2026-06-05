@@ -38,6 +38,16 @@ type ResourceHeader struct {
 
 type ResourceHeaders []ResourceHeader
 
+type ResourceUsers struct {
+	UserIds []string `json:"userIds"`
+}
+
+type ResourceRoles struct {
+	RoleIds []int64 `json:"roleIds"`
+}
+
+const ADMIN_ID int64 = 1
+
 // This is required because the `headers` property of the
 // response during `PUT` is a stringified JSON array.
 // This checks for that case and properly unmarshals it twice
@@ -118,6 +128,79 @@ func (c *Client) UpdateResource(resID int64, res *Resource) (*Resource, error) {
 	var out Resource
 	err = json.Unmarshal(data, &out)
 	return &out, err
+}
+
+func (c *Client) UpdateResourceUsers(resID int64, users []string) error {
+	path := fmt.Sprintf("/resource/%d/users", resID)
+	payload := ResourceUsers{
+		UserIds: users,
+	}
+	_, err := c.doRequest("POST", path, payload)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Client) UpdateResourceRoles(resID int64, roles []int64) error {
+	path := fmt.Sprintf("/resource/%d/roles", resID)
+	payload := ResourceRoles{
+		RoleIds: roles,
+	}
+	_, err := c.doRequest("POST", path, payload)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Client) GetResourceUsers(resID int64) ([]string, error) {
+	path := fmt.Sprintf("/resource/%d/users", resID)
+	data, err := c.doRequest("GET", path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var out struct {
+		Users []struct {
+			UserId string `json:"userId"`
+		} `json:"users"`
+	}
+	err = json.Unmarshal(data, &out)
+	if err != nil {
+		return nil, err
+	}
+
+	list := make([]string, len(out.Users))
+	for i, value := range out.Users {
+		list[i] = value.UserId
+	}
+	return list, nil
+}
+
+func (c *Client) GetResourceRoles(resID int64) ([]int64, error) {
+	path := fmt.Sprintf("/resource/%d/roles", resID)
+	data, err := c.doRequest("GET", path, nil)
+	if err != nil {
+		return nil, err
+	}
+	var out struct {
+		Roles []struct {
+			RoleId int64 `json:"roleId"`
+		} `json:"roles"`
+	}
+	err = json.Unmarshal(data, &out)
+	if err != nil {
+		return nil, err
+	}
+
+	list := make([]int64, 0, len(out.Roles))
+	for _, value := range out.Roles {
+		if value.RoleId != ADMIN_ID {
+			list = append(list, value.RoleId)
+		}
+	}
+	return list, nil
 }
 
 func (c *Client) DeleteResource(resID int64) error {

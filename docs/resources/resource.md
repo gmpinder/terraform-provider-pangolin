@@ -48,11 +48,13 @@ resource "pangolin_resource" "example" {
 - `proxy_port` (Number) The port to proxy if `http` is false
 - `proxy_protocol` (Boolean) Enable the proxy protocol.
 - `proxy_protocol_version` (Number) Version 1 is text-based and widely supported. Version 2 is binary and more efficient but less compatible. Make sure servers transport is added to dynamic config.
+- `roles` (List of Number) A list of role IDs to give access to the resource.
 - `ssl` (Boolean) Enable SSL for the resource.
 - `sso` (Boolean) Allow Pangolin SSO auth.
 - `sticky_session` (Boolean) Whether or not to enable sticky sessions. Requires `http` to be true.
 - `subdomain` (String) The subdomain for the resource. Requires `http` to be true.
 - `tls_server_name` (String) The hostname expected by the SSL endpoint
+- `users` (List of String) A list of user IDs to give access to the resource.
 
 ### Read-Only
 
